@@ -12,10 +12,13 @@ from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
 
 CORPUS_PATH = Path("data/interim/docstrings.jsonl")
-QUERIES_PATH = Path("data/eval/queries.jsonl")
+# Only the validation split: the fine-tuned model has seen the train split, so
+# scoring it on all silver queries would reward memorisation.
+VALIDATION_PATH = Path("data/eval/validation.jsonl")
 GOLD_PATH = Path("annotations/gold_queries.csv")
 EMBEDDINGS_CACHE = Path("data/interim/embeddings.npy")
 MODEL_NAME = "all-MiniLM-L6-v2"
+FINETUNED_MODEL = Path("models/retriever-minilm-ft")
 K_VALUES = (1, 5, 10)
 CI_K = 5
 BOOTSTRAP_SAMPLES = 10_000
@@ -45,15 +48,20 @@ def bm25_rankings(docs: list[dict], queries: list[dict], depth: int) -> list[np.
     return [np.argsort(-index.get_scores(tokenize(q["query"])))[:depth] for q in queries]
 
 
-def embedding_rankings(docs: list[dict], queries: list[dict], depth: int) -> list[np.ndarray]:
-    model = SentenceTransformer(MODEL_NAME)
-    doc_vectors = np.load(EMBEDDINGS_CACHE) if EMBEDDINGS_CACHE.exists() else None
+def embedding_rankings(
+    docs: list[dict], queries: list[dict], depth: int, model_name: str = MODEL_NAME, cache: Path | None = EMBEDDINGS_CACHE
+) -> list[np.ndarray]:
+    # Pass cache=None for a model that gets retrained: the size check below
+    # cannot tell old vectors from new ones when the corpus is unchanged.
+    model = SentenceTransformer(model_name)
+    doc_vectors = np.load(cache) if cache is not None and cache.exists() else None
     # A cache built from a different corpus would silently return wrong results.
     if doc_vectors is None or doc_vectors.shape[0] != len(docs):
         doc_vectors = model.encode(
             [document_text(d) for d in docs], normalize_embeddings=True, batch_size=64
         )
-        np.save(EMBEDDINGS_CACHE, doc_vectors)
+        if cache is not None:
+            np.save(cache, doc_vectors)
 
     query_vectors = model.encode([q["query"] for q in queries], normalize_embeddings=True)
     scores = query_vectors @ doc_vectors.T
@@ -122,23 +130,28 @@ def report(title: str, docs: list[dict], queries: list[dict], methods: dict[str,
             subset_rankings = [rankings[i] for i in indices]
             values = [recall_at_k(subset_rankings, docs, subset_queries, k) for k in K_VALUES]
             print(f"  {method_name:<12}" + "".join(f"{v:>8.2f}" for v in values))
-        baseline, candidate = (
-            hits_at_k([methods[name][i] for i in indices], docs, subset_queries, CI_K)
-            for name in ("BM25", "Embeddings")
-        )
-        low, high = paired_bootstrap_ci(baseline, candidate)
-        gap = candidate.mean() - baseline.mean()
-        print(f"  Embeddings - BM25 at R@{CI_K}: {gap:+.2f}   95% CI [{low:+.2f}, {high:+.2f}]")
+        names = list(methods)
+        for baseline_name, candidate_name in zip(names, names[1:]):
+            baseline, candidate = (
+                hits_at_k([methods[name][i] for i in indices], docs, subset_queries, CI_K)
+                for name in (baseline_name, candidate_name)
+            )
+            low, high = paired_bootstrap_ci(baseline, candidate)
+            gap = candidate.mean() - baseline.mean()
+            print(
+                f"  {candidate_name} - {baseline_name} at R@{CI_K}: {gap:+.2f}"
+                f"   95% CI [{low:+.2f}, {high:+.2f}]"
+            )
 
 
 def main() -> None:
     docs = load_jsonl(CORPUS_PATH)
     depth = max(K_VALUES)
-    silver = load_jsonl(QUERIES_PATH)
+    silver = load_jsonl(VALIDATION_PATH)
     gold_lenient, gold_strict = load_gold()
 
     for title, queries in [
-        ("SILVER: automatic labels", silver),
+        ("SILVER VALIDATION: automatic labels, held out from training", silver),
         ("GOLD: any correct name", gold_lenient),
         ("GOLD: primary name only", gold_strict),
     ]:
@@ -146,6 +159,8 @@ def main() -> None:
             "BM25": bm25_rankings(docs, queries, depth),
             "Embeddings": embedding_rankings(docs, queries, depth),
         }
+        if FINETUNED_MODEL.exists():
+            methods["Fine-tuned"] = embedding_rankings(docs, queries, depth, str(FINETUNED_MODEL), cache=None)
         report(title, docs, queries, methods)
 
 
