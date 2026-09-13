@@ -112,8 +112,9 @@ def names_in_answer(body: str, owners: dict[str, set[str]]) -> set[str]:
 
 def main() -> None:
     owners = corpus_owners()
-    questions = load_items("questions_page*.json")
-    answers = {a["answer_id"]: a["body"] for a in load_items("answers_batch*.json")}
+    # Vote order shifts between fetches, so a question can appear on two pages.
+    questions = list({q["question_id"]: q for q in load_items("questions_page*.json")}.values())
+    answers = {a["answer_id"]: a["body"] for a in load_items("answers_page*.json")}
 
     candidates: list[tuple[dict, set[str]]] = []
     for question in questions:

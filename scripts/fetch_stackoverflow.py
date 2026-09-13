@@ -14,7 +14,9 @@ import httpx
 
 API_URL = "https://api.stackexchange.com/2.3"
 RAW_DIR = Path("data/raw/stackoverflow")
-PAGES = 5
+# Anonymous access stops at page 25 ("page above 25 requires access token").
+# 25 pages cost about 50 requests: one for questions, one for their answers.
+PAGES = 25
 PAGE_SIZE = 100
 # The anonymous quota is 300 requests per day. Pausing between calls also
 # keeps well clear of the per-second throttle.
@@ -39,7 +41,7 @@ def fetch_cached(client: httpx.Client, path: str, params: dict, cache_file: Path
 
 def main() -> None:
     RAW_DIR.mkdir(parents=True, exist_ok=True)
-    questions: list[dict] = []
+    questions_fetched = accepted_total = answers_fetched = 0
 
     with httpx.Client(timeout=30) as client:
         for page in range(1, PAGES + 1):
@@ -50,23 +52,24 @@ def main() -> None:
                  "pagesize": PAGE_SIZE, "page": page, "filter": "withbody"},
                 RAW_DIR / f"questions_page{page}.json",
             )
-            questions.extend(payload["items"])
+            questions_fetched += len(payload["items"])
 
-        answer_ids = [q["accepted_answer_id"] for q in questions if "accepted_answer_id" in q]
-
-        answers_fetched = 0
-        for batch_number, start in enumerate(range(0, len(answer_ids), PAGE_SIZE), start=1):
-            ids = ";".join(str(i) for i in answer_ids[start:start + PAGE_SIZE])
-            payload = fetch_cached(
+            # One answers file per questions page, so each cached file always
+            # matches the same questions however many pages are fetched later.
+            answer_ids = [q["accepted_answer_id"] for q in payload["items"] if "accepted_answer_id" in q]
+            accepted_total += len(answer_ids)
+            if not answer_ids:
+                continue
+            answers = fetch_cached(
                 client,
-                f"/answers/{ids}",
+                f"/answers/{';'.join(str(i) for i in answer_ids)}",
                 {"filter": "withbody", "pagesize": PAGE_SIZE},
-                RAW_DIR / f"answers_batch{batch_number}.json",
+                RAW_DIR / f"answers_page{page}.json",
             )
-            answers_fetched += len(payload["items"])
+            answers_fetched += len(answers["items"])
 
-    print(f"questions fetched:          {len(questions)}")
-    print(f"with an accepted answer:    {len(answer_ids)}")
+    print(f"questions fetched:          {questions_fetched}")
+    print(f"with an accepted answer:    {accepted_total}")
     print(f"accepted answers fetched:   {answers_fetched}")
 
 

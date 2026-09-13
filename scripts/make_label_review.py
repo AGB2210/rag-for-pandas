@@ -34,7 +34,7 @@ def main() -> None:
     with QUERIES_PATH.open(encoding="utf-8") as handle:
         queries = [json.loads(line) for line in handle]
     accepted = {q["question_id"]: q.get("accepted_answer_id") for q in load_items("questions_page*.json")}
-    answers = {a["answer_id"]: a["body"] for a in load_items("answers_batch*.json")}
+    answers = {a["answer_id"]: a["body"] for a in load_items("answers_page*.json")}
 
     sample = random.Random(SEED).sample(queries, SAMPLE_SIZE)
 
