@@ -1,0 +1,28 @@
+# Python environment
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Secrets - never commit real credentials
+.env
+
+# Data and model artifacts are large and regenerable; they belong outside Git
+data/
+models/
+*.faiss
+*.npy
+
+# Experiment tracking output
+mlruns/
+
+# Editor and OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test and coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
