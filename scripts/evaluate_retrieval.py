@@ -17,6 +17,9 @@ GOLD_PATH = Path("annotations/gold_queries.csv")
 EMBEDDINGS_CACHE = Path("data/interim/embeddings.npy")
 MODEL_NAME = "all-MiniLM-L6-v2"
 K_VALUES = (1, 5, 10)
+CI_K = 5
+BOOTSTRAP_SAMPLES = 10_000
+SEED = 0
 
 
 def load_jsonl(path: Path) -> list[dict]:
@@ -57,13 +60,34 @@ def embedding_rankings(docs: list[dict], queries: list[dict], depth: int) -> lis
     return [np.argsort(-row)[:depth] for row in scores]
 
 
+def hits_at_k(rankings: list[np.ndarray], docs: list[dict], queries: list[dict], k: int) -> np.ndarray:
+    """1.0 for each query with at least one correct name in the top k results, else 0.0."""
+    return np.array(
+        [
+            bool({docs[i]["qualname"].split(".")[-1] for i in ranking[:k]} & set(query["labels"]))
+            for ranking, query in zip(rankings, queries)
+        ],
+        dtype=float,
+    )
+
+
 def recall_at_k(rankings: list[np.ndarray], docs: list[dict], queries: list[dict], k: int) -> float:
     """Fraction of queries where at least one correct name is in the top k results."""
-    hits = 0
-    for ranking, query in zip(rankings, queries):
-        retrieved_names = {docs[i]["qualname"].split(".")[-1] for i in ranking[:k]}
-        hits += bool(retrieved_names & set(query["labels"]))
-    return hits / len(queries)
+    return float(hits_at_k(rankings, docs, queries, k).mean())
+
+
+def paired_bootstrap_ci(baseline: np.ndarray, candidate: np.ndarray) -> tuple[float, float]:
+    """95% interval for the mean per-query gap `candidate - baseline`.
+
+    Resamples queries with replacement. It is paired: each resample keeps both
+    methods' results for the same queries, so how hard a query is cancels out
+    and only the difference between the methods varies.
+    """
+    rng = np.random.default_rng(SEED)
+    picks = rng.integers(0, len(baseline), size=(BOOTSTRAP_SAMPLES, len(baseline)))
+    gaps = (candidate[picks] - baseline[picks]).mean(axis=1)
+    low, high = np.percentile(gaps, [2.5, 97.5])
+    return float(low), float(high)
 
 
 def load_gold() -> tuple[list[dict], list[dict]]:
@@ -98,6 +122,13 @@ def report(title: str, docs: list[dict], queries: list[dict], methods: dict[str,
             subset_rankings = [rankings[i] for i in indices]
             values = [recall_at_k(subset_rankings, docs, subset_queries, k) for k in K_VALUES]
             print(f"  {method_name:<12}" + "".join(f"{v:>8.2f}" for v in values))
+        baseline, candidate = (
+            hits_at_k([methods[name][i] for i in indices], docs, subset_queries, CI_K)
+            for name in ("BM25", "Embeddings")
+        )
+        low, high = paired_bootstrap_ci(baseline, candidate)
+        gap = candidate.mean() - baseline.mean()
+        print(f"  Embeddings - BM25 at R@{CI_K}: {gap:+.2f}   95% CI [{low:+.2f}, {high:+.2f}]")
 
 
 def main() -> None:
