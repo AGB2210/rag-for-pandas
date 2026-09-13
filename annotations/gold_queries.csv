@@ -99,3 +99,203 @@ question_id,query,primary,also_correct,answerable,notes,url
 28006793,Pandas DataFrame to List of Lists,values,tolist to_numpy,yes,,https://stackoverflow.com/questions/28006793/pandas-dataframe-to-list-of-lists
 35339139,What values are valid in Pandas 'Freq' tags?,,,no,"offset aliases live in the user guide, not the API corpus",https://stackoverflow.com/questions/35339139/what-values-are-valid-in-pandas-freq-tags
 20383647,"Pandas selecting by label sometimes return Series, sometimes returns DataFrame",loc,,yes,,https://stackoverflow.com/questions/20383647/pandas-selecting-by-label-sometimes-return-series-sometimes-returns-dataframe
+21285380,Find column whose name contains a specific string,filter,columns,yes,,https://stackoverflow.com/questions/21285380/find-column-whose-name-contains-a-specific-string
+27405483,How to loop over grouped Pandas dataframe?,groupby,,yes,,https://stackoverflow.com/questions/27405483/how-to-loop-over-grouped-pandas-dataframe
+54426845,How to check if a pandas dataframe contains only numeric values column-wise?,to_numeric,notnull apply,yes,,https://stackoverflow.com/questions/54426845/how-to-check-if-a-pandas-dataframe-contains-only-numeric-values-column-wise
+27754891,Check if single cell value is NaN in Pandas,isnull,isna,yes,,https://stackoverflow.com/questions/27754891/check-if-single-cell-value-is-nan-in-pandas
+17383094,How can I map True/False to 1/0 in a Pandas DataFrame?,astype,,yes,,https://stackoverflow.com/questions/17383094/how-can-i-map-true-false-to-1-0-in-a-pandas-dataframe
+20067636,Pandas dataframe get first row of each group,first,groupby head,yes,,https://stackoverflow.com/questions/20067636/pandas-dataframe-get-first-row-of-each-group
+40262710,Sorting a pandas dataframe by its index,sort_index,,yes,,https://stackoverflow.com/questions/40262710/sorting-a-pandas-dataframe-by-its-index
+13385860,How can I remove extra whitespace from strings when parsing a csv file in Pandas?,read_table,read_csv strip,yes,converters,https://stackoverflow.com/questions/13385860/how-can-i-remove-extra-whitespace-from-strings-when-parsing-a-csv-file-in-pandas
+15705630,Get the row(s) which have the max value in groups using groupby,transform,groupby max,yes,,https://stackoverflow.com/questions/15705630/get-the-rows-which-have-the-max-value-in-groups-using-groupby
+17805304,How can I load data from mongodb collection into pandas' DataFrame?,DataFrame,,yes,constructor from a MongoDB cursor,https://stackoverflow.com/questions/17805304/how-can-i-load-data-from-mongodb-collection-into-pandas-dataframe
+22137723,Convert number strings with commas in pandas DataFrame to float,read_csv,,yes,thousands separator,https://stackoverflow.com/questions/22137723/convert-number-strings-with-commas-in-pandas-dataframe-to-float
+44723183,Set value on an entire column of a pandas dataframe,copy,loc,yes,SettingWithCopyWarning,https://stackoverflow.com/questions/44723183/set-value-on-an-entire-column-of-a-pandas-dataframe
+32888124,pandas out of bounds nanosecond timestamp after offset rollforward plus adding a month offset,to_datetime,,yes,errors=coerce,https://stackoverflow.com/questions/32888124/pandas-out-of-bounds-nanosecond-timestamp-after-offset-rollforward-plus-adding-a
+20612645,How to find the installed pandas version,,,no,"corpus gap: show_versions lives in pandas/util, outside the corpus",https://stackoverflow.com/questions/20612645/how-to-find-the-installed-pandas-version
+28773342,Truncate `TimeStamp` column to hour precision in pandas `DataFrame`,,,no,corpus gap: dt.floor is defined on a class the public-API filter drops,https://stackoverflow.com/questions/28773342/truncate-timestamp-column-to-hour-precision-in-pandas-dataframe
+38250710,"How to split data into 3 sets (train, validation and test)?",sample,,yes,answer splits with np.split after sample,https://stackoverflow.com/questions/38250710/how-to-split-data-into-3-sets-train-validation-and-test
+12389898,Python Pandas: how to add a totally new column to a data frame inside of a groupby/transform operation,apply,groupby transform,yes,,https://stackoverflow.com/questions/12389898/python-pandas-how-to-add-a-totally-new-column-to-a-data-frame-inside-of-a-group
+30808430,How to select columns from dataframe by regex,filter,,yes,,https://stackoverflow.com/questions/30808430/how-to-select-columns-from-dataframe-by-regex
+31843911,Sorting Pandas Dataframe by order of another index,reindex,,yes,,https://stackoverflow.com/questions/31843911/sorting-pandas-dataframe-by-order-of-another-index
+30530663,"How to ""select distinct"" across multiple data frame columns in pandas?",drop_duplicates,,yes,,https://stackoverflow.com/questions/30530663/how-to-select-distinct-across-multiple-data-frame-columns-in-pandas
+28311655,Ignoring NaNs with str.contains,contains,,yes,str.contains na=False,https://stackoverflow.com/questions/28311655/ignoring-nans-with-str-contains
+32375471,Pandas - convert strings to time without date,to_datetime,hour,yes,,https://stackoverflow.com/questions/32375471/pandas-convert-strings-to-time-without-date
+35528119,Pandas recalculate index after a concatenation,reset_index,,yes,,https://stackoverflow.com/questions/35528119/pandas-recalculate-index-after-a-concatenation
+20035518,Insert a link inside a Pandas table,to_html,,yes,,https://stackoverflow.com/questions/20035518/insert-a-link-inside-a-pandas-table
+49382207,How to map numeric data into categories / bins in Pandas dataframe,cut,,yes,,https://stackoverflow.com/questions/49382207/how-to-map-numeric-data-into-categories-bins-in-pandas-dataframe
+45504241,Create single row python pandas dataframe,DataFrame,loc,yes,constructor,https://stackoverflow.com/questions/45504241/create-single-row-python-pandas-dataframe
+28876243,How to delete the current row in pandas dataframe during df.iterrows(),drop,iterrows,yes,,https://stackoverflow.com/questions/28876243/how-to-delete-the-current-row-in-pandas-dataframe-during-df-iterrows
+15888648,Is it possible to insert a row at an arbitrary position in a dataframe using pandas?,concat,iloc reset_index,yes,,https://stackoverflow.com/questions/15888648/is-it-possible-to-insert-a-row-at-an-arbitrary-position-in-a-dataframe-using-pan
+31700691,Convert commas decimal separators to dots within a Dataframe,read_csv,,yes,decimal separator,https://stackoverflow.com/questions/31700691/convert-commas-decimal-separators-to-dots-within-a-dataframe
+21567842,Is there a performance difference between Numpy and Pandas?,,,no,conceptual performance comparison,https://stackoverflow.com/questions/21567842/is-there-a-performance-difference-between-numpy-and-pandas
+42331992,replace part of the string in pandas data frame,replace,,yes,Series.replace and str.replace,https://stackoverflow.com/questions/42331992/replace-part-of-the-string-in-pandas-data-frame
+11622652,"Large, persistent DataFrame in pandas",read_csv,concat,yes,chunksize,https://stackoverflow.com/questions/11622652/large-persistent-dataframe-in-pandas
+40146472,quickest way to swap index with values,Series,,yes,constructor,https://stackoverflow.com/questions/40146472/quickest-way-to-swap-index-with-values
+22918212,Fastest Way to Drop Duplicated Index in a Pandas DataFrame,duplicated,groupby first,yes,index.duplicated not in accepted answer,https://stackoverflow.com/questions/22918212/fastest-way-to-drop-duplicated-index-in-a-pandas-dataframe
+33279940,How to combine multiple rows of strings into one using pandas?,cat,,yes,str.cat,https://stackoverflow.com/questions/33279940/how-to-combine-multiple-rows-of-strings-into-one-using-pandas
+29077188,Absolute value for column in Python,abs,,yes,,https://stackoverflow.com/questions/29077188/absolute-value-for-column-in-python
+31460146,plotting value_counts() in seaborn barplot,,,no,seaborn barplot,https://stackoverflow.com/questions/31460146/plotting-value-counts-in-seaborn-barplot
+49728421,Pandas DataFrame: SettingWithCopyWarning: A value is trying to be set on a copy of a slice from a DataFrame,copy,notnull astype,yes,,https://stackoverflow.com/questions/49728421/pandas-dataframe-settingwithcopywarning-a-value-is-trying-to-be-set-on-a-copy
+50328246,Pandas groupby.size vs series.value_counts vs collections.Counter with multiple series,,,no,conceptual performance discussion,https://stackoverflow.com/questions/50328246/pandas-groupby-size-vs-series-value-counts-vs-collections-counter-with-multiple
+27907633,How to extract multiple JSON objects from one file?,read_json,,yes,"lines=True not in accepted answer, which uses the json module",https://stackoverflow.com/questions/27907633/how-to-extract-multiple-json-objects-from-one-file
+41207014,How can I set index while converting dictionary to dataframe?,set_index,,yes,,https://stackoverflow.com/questions/41207014/how-can-i-set-index-while-converting-dictionary-to-dataframe
+17084579,How to remove levels from a multi-indexed dataframe?,reset_index,droplevel,yes,,https://stackoverflow.com/questions/17084579/how-to-remove-levels-from-a-multi-indexed-dataframe
+38876816,Change Value of a Dataframe Column Based on a Filter,loc,apply,yes,,https://stackoverflow.com/questions/38876816/change-value-of-a-dataframe-column-based-on-a-filter
+22543208,ggplot styles in Python,,,no,matplotlib styles,https://stackoverflow.com/questions/22543208/ggplot-styles-in-python
+16249736,How to import data from mongodb to pandas?,DataFrame,,yes,constructor from a MongoDB cursor,https://stackoverflow.com/questions/16249736/how-to-import-data-from-mongodb-to-pandas
+68900763,How to update pandas DataFrame.drop() for Future Warning - all arguments of DataFrame.drop except for the argument 'labels' will be keyword-only,drop,,yes,,https://stackoverflow.com/questions/68900763/how-to-update-pandas-dataframe-drop-for-future-warning-all-arguments-of-data
+44877663,Error: float object has no attribute notnull,,,no,answer is np.where,https://stackoverflow.com/questions/44877663/error-float-object-has-no-attribute-notnull
+14529838,Apply multiple functions to multiple groupby columns,apply,agg aggregate groupby,yes,,https://stackoverflow.com/questions/14529838/apply-multiple-functions-to-multiple-groupby-columns
+28199524,Best way to count the number of rows with missing values in a pandas DataFrame,dropna,isnull,yes,,https://stackoverflow.com/questions/28199524/best-way-to-count-the-number-of-rows-with-missing-values-in-a-pandas-dataframe
+37575944,pandas groupby dropping columns,groupby,,yes,nuisance column exclusion,https://stackoverflow.com/questions/37575944/pandas-groupby-dropping-columns
+45393123,Adding calculated column in Pandas,,,no,plain column arithmetic,https://stackoverflow.com/questions/45393123/adding-calculated-column-in-pandas
+27817718,Reverse DataFrame column order,iloc,columns,yes,,https://stackoverflow.com/questions/27817718/reverse-dataframe-column-order
+16782323,Keep selected column as DataFrame instead of Series,loc,iloc,yes,,https://stackoverflow.com/questions/16782323/keep-selected-column-as-dataframe-instead-of-series
+38835483,Confusion about pandas copy of slice of dataframe warning,copy,,yes,,https://stackoverflow.com/questions/38835483/confusion-about-pandas-copy-of-slice-of-dataframe-warning
+14270391,How to plot multiple bars grouped,plot,,yes,"DataFrame.plot not in accepted answer, which uses matplotlib",https://stackoverflow.com/questions/14270391/how-to-plot-multiple-bars-grouped
+26046208,Normalize DataFrame by group,transform,groupby,yes,,https://stackoverflow.com/questions/26046208/normalize-dataframe-by-group
+21588811,pandas join DataFrame force suffix?,join,add_suffix,yes,add_suffix not in accepted answer,https://stackoverflow.com/questions/21588811/pandas-join-dataframe-force-suffix
+39815646,How do I append one pandas DataFrame to another?,concat,,yes,,https://stackoverflow.com/questions/39815646/how-do-i-append-one-pandas-dataframe-to-another
+15771472,Pandas: rolling mean by time interval,rolling,,yes,,https://stackoverflow.com/questions/15771472/pandas-rolling-mean-by-time-interval
+32460593,Including the group name in the apply function,apply,groupby,yes,group name via x.name,https://stackoverflow.com/questions/32460593/including-the-group-name-in-the-apply-function
+49834883,Scatter plot form dataframe with index on x-axis,plot,reset_index,yes,,https://stackoverflow.com/questions/49834883/scatter-plot-form-dataframe-with-index-on-x-axis
+38472276,Pandas sum multiple dataframes,add,,yes,fill_value=0,https://stackoverflow.com/questions/38472276/pandas-sum-multiple-dataframes
+33165734,Update index after sorting data-frame,reset_index,,yes,,https://stackoverflow.com/questions/33165734/update-index-after-sorting-data-frame
+49720616,python - Pandas - Dataframe.set_index - how to keep the old index column,set_index,reset_index,yes,,https://stackoverflow.com/questions/49720616/python-pandas-dataframe-set-index-how-to-keep-the-old-index-column
+20526414,Relative Strength Index in python pandas,rolling,,yes,relative strength index,https://stackoverflow.com/questions/20526414/relative-strength-index-in-python-pandas
+36004976,Count frequency of values in pandas DataFrame column,value_counts,to_dict,yes,,https://stackoverflow.com/questions/36004976/count-frequency-of-values-in-pandas-dataframe-column
+44616546,Finding the mean and standard deviation of a timedelta object in pandas df,mean,std to_timedelta,yes,,https://stackoverflow.com/questions/44616546/finding-the-mean-and-standard-deviation-of-a-timedelta-object-in-pandas-df
+17977540,Pandas: Looking up the list of sheets in an excel file,ExcelFile,read_excel,yes,sheet_names,https://stackoverflow.com/questions/17977540/pandas-looking-up-the-list-of-sheets-in-an-excel-file
+37001787,Remove ends of string entries in pandas DataFrame column,replace,,yes,str.replace,https://stackoverflow.com/questions/37001787/remove-ends-of-string-entries-in-pandas-dataframe-column
+14661701,How to drop a list of rows from Pandas dataframe?,drop,,yes,,https://stackoverflow.com/questions/14661701/how-to-drop-a-list-of-rows-from-pandas-dataframe
+34091877,How to add header row to a pandas DataFrame,read_csv,,yes,names=,https://stackoverflow.com/questions/34091877/how-to-add-header-row-to-a-pandas-dataframe
+52547805,How to convert dataframe to dictionary in pandas WITHOUT index,to_dict,set_index,yes,,https://stackoverflow.com/questions/52547805/how-to-convert-dataframe-to-dictionary-in-pandas-without-index
+12877189,float64 with pandas to_csv,to_csv,,yes,float_format,https://stackoverflow.com/questions/12877189/float64-with-pandas-to-csv
+32011359,Convert categorical data in pandas dataframe,codes,select_dtypes astype,yes,cat.codes,https://stackoverflow.com/questions/32011359/convert-categorical-data-in-pandas-dataframe
+40171498,Is there a query method or similar for pandas Series (pandas.Series.query())?,query,,yes,,https://stackoverflow.com/questions/40171498/is-there-a-query-method-or-similar-for-pandas-series-pandas-series-query
+20076195,What is the most efficient way of counting occurrences in pandas?,value_counts,,yes,,https://stackoverflow.com/questions/20076195/what-is-the-most-efficient-way-of-counting-occurrences-in-pandas
+18196203,How to conditionally update DataFrame column in Pandas,loc,,yes,,https://stackoverflow.com/questions/18196203/how-to-conditionally-update-dataframe-column-in-pandas
+47226407,"pandas: what can be done with a .pipe() that can't be done with .apply(), on a GroupBy?",pipe,apply,yes,,https://stackoverflow.com/questions/47226407/pandas-what-can-be-done-with-a-pipe-that-cant-be-done-with-apply-on-a-g
+35827863,Remove Outliers in Pandas DataFrame using Percentiles,quantile,apply loc,yes,,https://stackoverflow.com/questions/35827863/remove-outliers-in-pandas-dataframe-using-percentiles
+30635145,Create multiple dataframes in loop,,,no,Python dict of DataFrames,https://stackoverflow.com/questions/30635145/create-multiple-dataframes-in-loop
+41255215,pandas - find first occurrence,idxmax,searchsorted ne,yes,,https://stackoverflow.com/questions/41255215/pandas-find-first-occurrence
+36106490,How to get unique values from multiple columns in a pandas groupby,unique,apply groupby,yes,,https://stackoverflow.com/questions/36106490/how-to-get-unique-values-from-multiple-columns-in-a-pandas-groupby
+48590268,Pandas get the most frequent values of a column,mode,value_counts,yes,,https://stackoverflow.com/questions/48590268/pandas-get-the-most-frequent-values-of-a-column
+30233982,Merge dataframes in a dictionary,concat,,yes,,https://stackoverflow.com/questions/30233982/merge-dataframes-in-a-dictionary
+23668427,pandas three-way joining multiple dataframes on columns,merge,,yes,,https://stackoverflow.com/questions/23668427/pandas-three-way-joining-multiple-dataframes-on-columns
+34789888,Convert datetime columns to a different timezone pandas,tz_convert,tz_localize,yes,,https://stackoverflow.com/questions/34789888/convert-datetime-columns-to-a-different-timezone-pandas
+26720916,Faster way to rank rows in subgroups in pandas dataframe,rank,groupby cumcount,yes,,https://stackoverflow.com/questions/26720916/faster-way-to-rank-rows-in-subgroups-in-pandas-dataframe
+46878156,Pandas filter dataframe rows with a specific year,,,no,"corpus gap: dt.year documentation is passed to _field_accessor, which the extractor does not read",https://stackoverflow.com/questions/46878156/pandas-filter-dataframe-rows-with-a-specific-year
+48366506,Calculate new column as the mean of other columns in pandas,mean,loc,yes,,https://stackoverflow.com/questions/48366506/calculate-new-column-as-the-mean-of-other-columns-in-pandas
+29530232,How to check if any value is NaN in a Pandas DataFrame,isnull,any isna,yes,,https://stackoverflow.com/questions/29530232/how-to-check-if-any-value-is-nan-in-a-pandas-dataframe
+17751626,Create a pandas DataFrame from multiple dicts,DataFrame,from_dict from_records,yes,constructor,https://stackoverflow.com/questions/17751626/create-a-pandas-dataframe-from-multiple-dicts
+18603270,Progress indicator during pandas operations,,,no,tqdm progress_apply,https://stackoverflow.com/questions/18603270/progress-indicator-during-pandas-operations
+42518864,Convert JSON data from Request into Pandas DataFrame,DataFrame,json_normalize read_json,yes,constructor,https://stackoverflow.com/questions/42518864/convert-json-data-from-request-into-pandas-dataframe
+36814100,pandas: to_numeric for multiple columns,to_numeric,read_csv apply,yes,,https://stackoverflow.com/questions/36814100/pandas-to-numeric-for-multiple-columns
+16327055,How to add an empty column to a dataframe?,assign,,yes,accepted answer uses plain column assignment,https://stackoverflow.com/questions/16327055/how-to-add-an-empty-column-to-a-dataframe
+33797454,Why the column order is changing while appending pandas dataframes?,concat,read_csv,yes,,https://stackoverflow.com/questions/33797454/why-the-column-order-is-changing-while-appending-pandas-dataframes
+39778686,pandas reset_index after groupby.value_counts(),reset_index,rename size,yes,,https://stackoverflow.com/questions/39778686/pandas-reset-index-after-groupby-value-counts
+25024797,Max and Min date in pandas groupby,agg,aggregate groupby min max,yes,,https://stackoverflow.com/questions/25024797/max-and-min-date-in-pandas-groupby
+26762100,Reconstruct a categorical variable from dummies in pandas,from_dummies,stack,yes,"from_dummies not in accepted answer, which predates it",https://stackoverflow.com/questions/26762100/reconstruct-a-categorical-variable-from-dummies-in-pandas
+53255796,How to get a single value as a string from pandas dataframe,item,loc at values,yes,,https://stackoverflow.com/questions/53255796/how-to-get-a-single-value-as-a-string-from-pandas-dataframe
+38332787,Pandas to_sql to sqlite returns 'Engine' object has no attribute 'cursor',to_sql,,yes,,https://stackoverflow.com/questions/38332787/pandas-to-sql-to-sqlite-returns-engine-object-has-no-attribute-cursor
+46153647,KeyError: 0 when accessing value in pandas series,iloc,iat,yes,,https://stackoverflow.com/questions/46153647/keyerror-0-when-accessing-value-in-pandas-series
+32751229,"Pandas sum by groupby, but exclude certain columns",sum,groupby,yes,,https://stackoverflow.com/questions/32751229/pandas-sum-by-groupby-but-exclude-certain-columns
+37725195,Pandas - Replace values based on index,loc,,yes,,https://stackoverflow.com/questions/37725195/pandas-replace-values-based-on-index
+20122521,"Looking for pandas ""ungroup by"" operation opposite to .groupby in the following string aggregation?",explode,reset_index split,yes,explode not in accepted answer,https://stackoverflow.com/questions/20122521/looking-for-pandas-ungroup-by-operation-opposite-to-groupby-in-the-following
+24870306,How to check if a column exists in Pandas,columns,,yes,,https://stackoverflow.com/questions/24870306/how-to-check-if-a-column-exists-in-pandas
+18250298,How to check if a value is in the list in selection from pandas data frame?,isin,,yes,,https://stackoverflow.com/questions/18250298/how-to-check-if-a-value-is-in-the-list-in-selection-from-pandas-data-frame
+26700598,Matplotlib showing x-tick labels overlapping,,,no,matplotlib tick labels,https://stackoverflow.com/questions/26700598/matplotlib-showing-x-tick-labels-overlapping
+33727667,Pandas SettingWithCopyWarning: A value is trying to be set on a copy of a slice from a DataFrame,copy,rename,yes,SettingWithCopyWarning,https://stackoverflow.com/questions/33727667/pandas-settingwithcopywarning-a-value-is-trying-to-be-set-on-a-copy-of-a-slice
+23600582,Concatenate Pandas columns under new multi-index level,concat,,yes,keys=,https://stackoverflow.com/questions/23600582/concatenate-pandas-columns-under-new-multi-index-level
+33004573,"After groupby, how to flatten column headers?",reset_index,groupby,yes,as_index=False,https://stackoverflow.com/questions/33004573/after-groupby-how-to-flatten-column-headers
+38716643,using pandas.read_csv to read certain columns,read_csv,,yes,usecols,https://stackoverflow.com/questions/38716643/using-pandas-read-csv-to-read-certain-columns
+14984119,python pandas remove duplicate columns,duplicated,loc,yes,columns.duplicated,https://stackoverflow.com/questions/14984119/python-pandas-remove-duplicate-columns
+49783178,Keep other columns when using sum() with groupby,groupby,sum,yes,as_index=False,https://stackoverflow.com/questions/49783178/keep-other-columns-when-using-sum-with-groupby
+47023541,How to count unique records by two columns in pandas?,,,no,corpus gap: GroupBy.ngroups has no docstring in the source,https://stackoverflow.com/questions/47023541/how-to-count-unique-records-by-two-columns-in-pandas
+32938060,Reverting from multiindex to single index dataframe in pandas,reset_index,,yes,,https://stackoverflow.com/questions/32938060/reverting-from-multiindex-to-single-index-dataframe-in-pandas
+50372272,How to add columns to an empty pandas dataframe?,assign,concat,yes,,https://stackoverflow.com/questions/50372272/how-to-add-columns-to-an-empty-pandas-dataframe
+40156469,How to check if any value of a column is in a range (in between two values) in Pandas?,between,any,yes,,https://stackoverflow.com/questions/40156469/how-to-check-if-any-value-of-a-column-is-in-a-range-in-between-two-values-in-p
+34248741,Plotting Pandas Multiindex Bar Chart,plot,unstack,yes,,https://stackoverflow.com/questions/34248741/plotting-pandas-multiindex-bar-chart
+21018654,"Strings in a DataFrame, but dtype is object",,,no,"NumPy object dtype, conceptual",https://stackoverflow.com/questions/21018654/strings-in-a-dataframe-but-dtype-is-object
+26277757,Pandas to_html() truncates string contents,set_option,,yes,display.max_colwidth,https://stackoverflow.com/questions/26277757/pandas-to-html-truncates-string-contents
+22081878,get previous row's value and calculate new column pandas python,shift,groupby,yes,,https://stackoverflow.com/questions/22081878/get-previous-rows-value-and-calculate-new-column-pandas-python
+50089903,Convert column to timestamp - Pandas Dataframe,to_datetime,,yes,,https://stackoverflow.com/questions/50089903/convert-column-to-timestamp-pandas-dataframe
+11040626,Add column to index without resetting,set_index,,yes,append=True,https://stackoverflow.com/questions/11040626/add-column-to-index-without-resetting
+24147278,How do I create test and train samples from one dataframe with pandas?,sample,,yes,"DataFrame.sample not in accepted answer, which uses a NumPy mask",https://stackoverflow.com/questions/24147278/how-do-i-create-test-and-train-samples-from-one-dataframe-with-pandas
+26255671,Pandas column values to columns?,pivot,pivot_table unstack,yes,,https://stackoverflow.com/questions/26255671/pandas-column-values-to-columns
+12569730,Sum all columns with a wildcard name search using Python Pandas,filter,sum,yes,,https://stackoverflow.com/questions/12569730/sum-all-columns-with-a-wildcard-name-search-using-python-pandas
+29461608,Fixing x axis scale and autoscale y axis,,,no,matplotlib axis limits,https://stackoverflow.com/questions/29461608/fixing-x-axis-scale-and-autoscale-y-axis
+22356881,Using a Pandas dataframe index as values for x-axis in matplotlib plot,plot,,yes,DataFrame.plot uses the index as x; accepted answer is matplotlib,https://stackoverflow.com/questions/22356881/using-a-pandas-dataframe-index-as-values-for-x-axis-in-matplotlib-plot
+27787930,How to get number of groups in a groupby object in pandas?,,,no,corpus gap: GroupBy.ngroups has no docstring in the source,https://stackoverflow.com/questions/27787930/how-to-get-number-of-groups-in-a-groupby-object-in-pandas
+24290495,Constructing 3D Pandas DataFrame,from_tuples,DataFrame,yes,,https://stackoverflow.com/questions/24290495/constructing-3d-pandas-dataframe
+45745085,Python pandas: how to remove nan and -inf values,isin,any dropna replace,yes,,https://stackoverflow.com/questions/45745085/python-pandas-how-to-remove-nan-and-inf-values
+40339886,pandas concat generates nan values,reset_index,concat,yes,,https://stackoverflow.com/questions/40339886/pandas-concat-generates-nan-values
+49120069,Writing a pickle file to an s3 bucket in AWS,to_pickle,,yes,,https://stackoverflow.com/questions/49120069/writing-a-pickle-file-to-an-s3-bucket-in-aws
+29314033,Drop rows containing empty cells from a pandas DataFrame,dropna,replace,yes,,https://stackoverflow.com/questions/29314033/drop-rows-containing-empty-cells-from-a-pandas-dataframe
+19365513,How to add an extra row to a pandas dataframe,loc,concat,yes,setting with enlargement,https://stackoverflow.com/questions/19365513/how-to-add-an-extra-row-to-a-pandas-dataframe
+38733477,What's the best way to sum all values in a Pandas dataframe?,sum,to_numpy values,yes,,https://stackoverflow.com/questions/38733477/whats-the-best-way-to-sum-all-values-in-a-pandas-dataframe
+28595701,pandas equivalent of R's cbind (concatenate/stack vectors horizontally),concat,,yes,,https://stackoverflow.com/questions/28595701/pandas-equivalent-of-rs-cbind-concatenate-stack-vectors-horizontally
+17098654,How to reversibly store and load a Pandas dataframe to/from disk,to_pickle,read_pickle HDFStore,yes,,https://stackoverflow.com/questions/17098654/how-to-reversibly-store-and-load-a-pandas-dataframe-to-from-disk
+18973404,How to change the color of a single bar in a bar plot,,,no,matplotlib bar colours,https://stackoverflow.com/questions/18973404/how-to-change-the-color-of-a-single-bar-in-a-bar-plot
+51589573,Pandas filter data frame rows by function,apply,loc,yes,,https://stackoverflow.com/questions/51589573/pandas-filter-data-frame-rows-by-function
+38884466,How to select a range of values in a pandas dataframe column?,between,,yes,,https://stackoverflow.com/questions/38884466/how-to-select-a-range-of-values-in-a-pandas-dataframe-column
+46640945,Grouping by multiple columns to find duplicate rows pandas,duplicated,,yes,"subset, keep=False",https://stackoverflow.com/questions/46640945/grouping-by-multiple-columns-to-find-duplicate-rows-pandas
+57713712,Group by consecutive index numbers,,,no,consecutive runs with more_itertools,https://stackoverflow.com/questions/57713712/group-by-consecutive-index-numbers
+12200693,Python Pandas How to assign groupby operation results back to columns in parent dataframe?,transform,join groupby,yes,transform not in accepted answer,https://stackoverflow.com/questions/12200693/python-pandas-how-to-assign-groupby-operation-results-back-to-columns-in-parent
+20233071,Filter Pandas DataFrame by time index,loc,,yes,,https://stackoverflow.com/questions/20233071/filter-pandas-dataframe-by-time-index
+57067551,How to read multiple json files into pandas dataframe?,concat,read_json,yes,,https://stackoverflow.com/questions/57067551/how-to-read-multiple-json-files-into-pandas-dataframe
+42636765,How to set all the values of an existing Pandas DataFrame to zero?,,,no,writes to the underlying NumPy array,https://stackoverflow.com/questions/42636765/how-to-set-all-the-values-of-an-existing-pandas-dataframe-to-zero
+18689512,Efficiently checking if arbitrary object is NaN in Python / numpy / pandas?,isnull,isna,yes,,https://stackoverflow.com/questions/18689512/efficiently-checking-if-arbitrary-object-is-nan-in-python-numpy-pandas
+24408557,Pandas read_sql with parameters,read_sql,,yes,params,https://stackoverflow.com/questions/24408557/pandas-read-sql-with-parameters
+11077023,What are the differences between Pandas and NumPy+SciPy in Python?,,,no,conceptual comparison,https://stackoverflow.com/questions/11077023/what-are-the-differences-between-pandas-and-numpyscipy-in-python
+43890844,Pythonic type hints with pandas?,,,no,Python type hints,https://stackoverflow.com/questions/43890844/pythonic-type-hints-with-pandas
+27965295,"dropping rows from dataframe based on a ""not in"" condition",isin,,yes,,https://stackoverflow.com/questions/27965295/dropping-rows-from-dataframe-based-on-a-not-in-condition
+26205922,Calculate weighted average using a pandas/dataframe,transform,groupby sum,yes,,https://stackoverflow.com/questions/26205922/calculate-weighted-average-using-a-pandas-dataframe
+45758646,pandas - convert string into list of strings,split,apply,yes,str.split not in accepted answer,https://stackoverflow.com/questions/45758646/pandas-convert-string-into-list-of-strings
+19125091,Pandas Merge - How to avoid duplicating columns,merge,difference columns,yes,,https://stackoverflow.com/questions/19125091/pandas-merge-how-to-avoid-duplicating-columns
+35321812,move column in pandas dataframe,reindex,,yes,accepted answer reorders with plain indexing,https://stackoverflow.com/questions/35321812/move-column-in-pandas-dataframe
+29882573,Pandas: slow date conversion,to_datetime,,yes,cache and format,https://stackoverflow.com/questions/29882573/pandas-slow-date-conversion
+49936557,pandas dataframe: loc vs query performance,query,loc eval,yes,,https://stackoverflow.com/questions/49936557/pandas-dataframe-loc-vs-query-performance
+21435176,"Appending two dataframes with same columns, different order",concat,,yes,,https://stackoverflow.com/questions/21435176/appending-two-dataframes-with-same-columns-different-order
+17841149,Pandas groupby: How to get a union of strings,apply,groupby sum agg,yes,,https://stackoverflow.com/questions/17841149/pandas-groupby-how-to-get-a-union-of-strings
+29206612,Difference between data type 'datetime64[ns]' and '<M8[ns]'?,,,no,NumPy dtype byte order,https://stackoverflow.com/questions/29206612/difference-between-data-type-datetime64ns-and-m8ns
+35019156,Pandas format column as currency,apply,map format,yes,,https://stackoverflow.com/questions/35019156/pandas-format-column-as-currency
+30276745,Change Series inplace in DataFrame after applying function on it,loc,apply,yes,,https://stackoverflow.com/questions/30276745/change-series-inplace-in-dataframe-after-applying-function-on-it
+29034928,Pandas convert a column of list to dummies,get_dummies,explode groupby,yes,,https://stackoverflow.com/questions/29034928/pandas-convert-a-column-of-list-to-dummies
+29334463,How can I partially read a huge CSV file?,read_csv,,yes,chunksize,https://stackoverflow.com/questions/29334463/how-can-i-partially-read-a-huge-csv-file
+15242746,Handling Variable Number of Columns with Pandas - Python,read_csv,,yes,names=,https://stackoverflow.com/questions/15242746/handling-variable-number-of-columns-with-pandas-python
+36362432,"Pandas: Refer to column name, case insensitive",lower,columns,yes,str.lower,https://stackoverflow.com/questions/36362432/pandas-refer-to-column-name-case-insensitive
+14885895,Color a scatter plot by Column Values,plot,,yes,"DataFrame.plot.scatter not in accepted answer, which uses seaborn",https://stackoverflow.com/questions/14885895/color-a-scatter-plot-by-column-values
+23797491,Parse_dates in Pandas,read_csv,to_datetime,yes,parse_dates,https://stackoverflow.com/questions/23797491/parse-dates-in-pandas
+40755680,how to reset index pandas dataframe after dropna() pandas dataframe,reset_index,dropna,yes,,https://stackoverflow.com/questions/40755680/how-to-reset-index-pandas-dataframe-after-dropna-pandas-dataframe
+16167829,"In pandas, how can I reset index without adding a new column?",reset_index,,yes,,https://stackoverflow.com/questions/16167829/in-pandas-how-can-i-reset-index-without-adding-a-new-column
+12704305,return column names from pyodbc execute() statement,,,no,pyodbc cursor,https://stackoverflow.com/questions/12704305/return-column-names-from-pyodbc-execute-statement
+16689514,how to get the average of dataframe column values,mean,,yes,,https://stackoverflow.com/questions/16689514/how-to-get-the-average-of-dataframe-column-values
+33282119,pandas - filter dataframe by another dataframe by row elements,isin,set_index merge,yes,,https://stackoverflow.com/questions/33282119/pandas-filter-dataframe-by-another-dataframe-by-row-elements
+33689694,Read all but last line of CSV file in pandas,read_csv,,yes,on_bad_lines / skipfooter,https://stackoverflow.com/questions/33689694/read-all-but-last-line-of-csv-file-in-pandas
+26879073,Checking whether data frame is copy or view in Pandas,,,no,internal attributes,https://stackoverflow.com/questions/26879073/checking-whether-data-frame-is-copy-or-view-in-pandas
+18470323,Selecting columns from pandas MultiIndex,get_level_values,loc isin,yes,,https://stackoverflow.com/questions/18470323/selecting-columns-from-pandas-multiindex
+44575251,reading multiple files contained in a zip file with pandas,read_csv,,yes,,https://stackoverflow.com/questions/44575251/reading-multiple-files-contained-in-a-zip-file-with-pandas
+51775175,Pandas dataframe to JSONL (JSON Lines) conversion,to_json,,yes,lines=True,https://stackoverflow.com/questions/51775175/pandas-dataframe-to-jsonl-json-lines-conversion
+32801806,pandas concat columns ignore_index doesn't work,concat,reset_index,yes,,https://stackoverflow.com/questions/32801806/pandas-concat-columns-ignore-index-doesnt-work
+31917964,Python numpy: cannot convert datetime64[ns] to datetime64[D] (to use with Numba),,,no,NumPy astype on .values,https://stackoverflow.com/questions/31917964/python-numpy-cannot-convert-datetime64ns-to-datetime64d-to-use-with-numba
+40385782,"Make a union of polygons in GeoPandas, or Shapely (into a single geometry)",,,no,GeoPandas / Shapely,https://stackoverflow.com/questions/40385782/make-a-union-of-polygons-in-geopandas-or-shapely-into-a-single-geometry
+18199288,Getting the integer index of a Pandas DataFrame row fulfilling a condition?,,,no,answer is np.where,https://stackoverflow.com/questions/18199288/getting-the-integer-index-of-a-pandas-dataframe-row-fulfilling-a-condition
+59956670,Parsing city of origin / destination city from a string,,,no,natural language parsing,https://stackoverflow.com/questions/59956670/parsing-city-of-origin-destination-city-from-a-string
+36921951,"Truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all()",,,no,boolean operators & and |,https://stackoverflow.com/questions/36921951/truth-value-of-a-series-is-ambiguous-use-a-empty-a-bool-a-item-a-any-o
+14507794,How to flatten a hierarchical index in columns,get_level_values,to_flat_index columns,yes,,https://stackoverflow.com/questions/14507794/how-to-flatten-a-hierarchical-index-in-columns
+19961490,"Construct pandas DataFrame from list of tuples of (row,col,values)",pivot,DataFrame,yes,,https://stackoverflow.com/questions/19961490/construct-pandas-dataframe-from-list-of-tuples-of-row-col-values
+11361985,Output data from all columns in a dataframe in pandas,set_option,values,yes,display options not in accepted answer,https://stackoverflow.com/questions/11361985/output-data-from-all-columns-in-a-dataframe-in-pandas
+17933282,Using numpy.genfromtxt to read a csv file with strings containing commas,read_csv,,yes,quotechar,https://stackoverflow.com/questions/17933282/using-numpy-genfromtxt-to-read-a-csv-file-with-strings-containing-commas
+26133538,round a single column in pandas,round,,yes,,https://stackoverflow.com/questions/26133538/round-a-single-column-in-pandas
+38792122,How to group and count rows by month and year using Pandas?,groupby,agg count,yes,dt.year / dt.month not in corpus,https://stackoverflow.com/questions/38792122/how-to-group-and-count-rows-by-month-and-year-using-pandas
+35530640,"Pandas Use Value if Not Null, Else Use Value From Next Column",fillna,combine_first,yes,,https://stackoverflow.com/questions/35530640/pandas-use-value-if-not-null-else-use-value-from-next-column
+17193850,Get column by number in Pandas,iloc,loc,yes,,https://stackoverflow.com/questions/17193850/get-column-by-number-in-pandas
+41776801,What does In-place sort_values in pandas exactly mean?,sort_values,,yes,inplace,https://stackoverflow.com/questions/41776801/what-does-in-place-sort-values-in-pandas-exactly-mean
+24386638,"Pandas sum two columns, skipping NaN",fillna,add,yes,,https://stackoverflow.com/questions/24386638/pandas-sum-two-columns-skipping-nan
+26595819,double quoted elements in csv cant read with pandas,read_csv,,yes,quoting,https://stackoverflow.com/questions/26595819/double-quoted-elements-in-csv-cant-read-with-pandas
+25457920,Convert row names into a column in Pandas,reset_index,name,yes,,https://stackoverflow.com/questions/25457920/convert-row-names-into-a-column-in-pandas
+55240330,How to read CSV file from GitHub using pandas,read_csv,,yes,,https://stackoverflow.com/questions/55240330/how-to-read-csv-file-from-github-using-pandas
+27126511,add columns different length pandas,concat,,yes,"axis=1, ignore_index",https://stackoverflow.com/questions/27126511/add-columns-different-length-pandas
