@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import json
 import re
 from pathlib import Path
@@ -12,6 +13,7 @@ from sentence_transformers import SentenceTransformer
 
 CORPUS_PATH = Path("data/interim/docstrings.jsonl")
 QUERIES_PATH = Path("data/eval/queries.jsonl")
+GOLD_PATH = Path("annotations/gold_queries.csv")
 EMBEDDINGS_CACHE = Path("data/interim/embeddings.npy")
 MODEL_NAME = "all-MiniLM-L6-v2"
 K_VALUES = (1, 5, 10)
@@ -64,21 +66,30 @@ def recall_at_k(rankings: list[np.ndarray], docs: list[dict], queries: list[dict
     return hits / len(queries)
 
 
-def main() -> None:
-    docs = load_jsonl(CORPUS_PATH)
-    queries = load_jsonl(QUERIES_PATH)
-    depth = max(K_VALUES)
+def load_gold() -> tuple[list[dict], list[dict]]:
+    """Hand-labelled queries, as lenient (any correct name) and strict (primary only) copies.
 
-    methods = {
-        "BM25": bm25_rankings(docs, queries, depth),
-        "Embeddings": embedding_rankings(docs, queries, depth),
-    }
+    Questions marked unanswerable are left out: no document can be retrieved
+    for them, so they would only lower every method's score by the same amount.
+    """
+    with GOLD_PATH.open(encoding="utf-8") as handle:
+        rows = [row for row in csv.DictReader(handle) if row["answerable"] == "yes"]
+    lenient, strict = [], []
+    for row in rows:
+        query_words = set(re.findall(r"\w+", row["query"].lower()))
+        base = {"query": row["query"], "label_in_query": row["primary"].lower() in query_words}
+        lenient.append({**base, "labels": [row["primary"], *row["also_correct"].split()]})
+        strict.append({**base, "labels": [row["primary"]]})
+    return lenient, strict
+
+
+def report(title: str, docs: list[dict], queries: list[dict], methods: dict[str, list[np.ndarray]]) -> None:
     subsets = {
         "ALL QUERIES": list(range(len(queries))),
         "NAME IN TITLE (easy)": [i for i, q in enumerate(queries) if q["label_in_query"]],
         "NAME NOT IN TITLE (honest test)": [i for i, q in enumerate(queries) if not q["label_in_query"]],
     }
-
+    print(f"\n===== {title} =====")
     for subset_name, indices in subsets.items():
         subset_queries = [queries[i] for i in indices]
         print(f"\n{subset_name}  (n={len(indices)})")
@@ -87,6 +98,24 @@ def main() -> None:
             subset_rankings = [rankings[i] for i in indices]
             values = [recall_at_k(subset_rankings, docs, subset_queries, k) for k in K_VALUES]
             print(f"  {method_name:<12}" + "".join(f"{v:>8.2f}" for v in values))
+
+
+def main() -> None:
+    docs = load_jsonl(CORPUS_PATH)
+    depth = max(K_VALUES)
+    silver = load_jsonl(QUERIES_PATH)
+    gold_lenient, gold_strict = load_gold()
+
+    for title, queries in [
+        ("SILVER: automatic labels", silver),
+        ("GOLD: any correct name", gold_lenient),
+        ("GOLD: primary name only", gold_strict),
+    ]:
+        methods = {
+            "BM25": bm25_rankings(docs, queries, depth),
+            "Embeddings": embedding_rankings(docs, queries, depth),
+        }
+        report(title, docs, queries, methods)
 
 
 if __name__ == "__main__":
