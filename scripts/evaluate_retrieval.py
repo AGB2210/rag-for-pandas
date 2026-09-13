@@ -19,6 +19,7 @@ GOLD_PATH = Path("annotations/gold_queries.csv")
 EMBEDDINGS_CACHE = Path("data/interim/embeddings.npy")
 MODEL_NAME = "all-MiniLM-L6-v2"
 FINETUNED_MODEL = Path("models/retriever-minilm-ft")
+HARD_NEGATIVE_MODEL = Path("models/retriever-minilm-ft-hn")
 K_VALUES = (1, 5, 10)
 CI_K = 5
 BOOTSTRAP_SAMPLES = 10_000
@@ -125,13 +126,17 @@ def report(title: str, docs: list[dict], queries: list[dict], methods: dict[str,
     for subset_name, indices in subsets.items():
         subset_queries = [queries[i] for i in indices]
         print(f"\n{subset_name}  (n={len(indices)})")
-        print(f"  {'method':<12}" + "".join(f"{'R@' + str(k):>8}" for k in K_VALUES))
+        print(f"  {'method':<14}" + "".join(f"{'R@' + str(k):>8}" for k in K_VALUES))
         for method_name, rankings in methods.items():
             subset_rankings = [rankings[i] for i in indices]
             values = [recall_at_k(subset_rankings, docs, subset_queries, k) for k in K_VALUES]
-            print(f"  {method_name:<12}" + "".join(f"{v:>8.2f}" for v in values))
+            print(f"  {method_name:<14}" + "".join(f"{v:>8.2f}" for v in values))
         names = list(methods)
-        for baseline_name, candidate_name in zip(names, names[1:]):
+        # Each method against the one before it, then the final method against BM25.
+        comparisons = list(zip(names, names[1:]))
+        if len(names) > 2:
+            comparisons.append((names[0], names[-1]))
+        for baseline_name, candidate_name in comparisons:
             baseline, candidate = (
                 hits_at_k([methods[name][i] for i in indices], docs, subset_queries, CI_K)
                 for name in (baseline_name, candidate_name)
@@ -161,6 +166,8 @@ def main() -> None:
         }
         if FINETUNED_MODEL.exists():
             methods["Fine-tuned"] = embedding_rankings(docs, queries, depth, str(FINETUNED_MODEL), cache=None)
+        if HARD_NEGATIVE_MODEL.exists():
+            methods["Fine-tuned+HN"] = embedding_rankings(docs, queries, depth, str(HARD_NEGATIVE_MODEL), cache=None)
         report(title, docs, queries, methods)
 
 
