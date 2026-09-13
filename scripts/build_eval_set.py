@@ -27,6 +27,15 @@ QUALIFIED_MENTION = re.compile(r"\b(?:pd|pandas|DataFrame|Series|Index)\.([A-Za-
 # really about. Chosen from the frequency report this script prints.
 GENERIC_NAMES: set[str] = {"DataFrame", "Series"}
 
+# A method call whose chain starts at one of these belongs to another library,
+# e.g. `np.datetime64(x).astype(datetime)` is NumPy's astype, not pandas'.
+FOREIGN_ROOTS: set[str] = {"np", "numpy", "os", "math", "datetime", "re", "json", "time"}
+# Documented in pandas, but in answers they are almost always Python list or
+# string methods (`rows.append(...)`, `"{}".format(...)`). Found in manual review.
+PYTHON_IN_PRACTICE: set[str] = {"append", "clear", "format", "remove", "sort"}
+STRING_LITERAL = "<str>"
+OPENING = {")": "(", "]": "["}
+
 
 def load_items(pattern: str) -> list[dict]:
     items: list[dict] = []
@@ -35,23 +44,74 @@ def load_items(pattern: str) -> list[dict]:
     return items
 
 
-def corpus_names() -> set[str]:
-    """Final segment of every documented name: 'DataFrame.dropna' -> 'dropna'."""
+def corpus_owners() -> dict[str, set[str]]:
+    """Map each final name to the classes documenting it: 'lower' -> {'StringMethods'}."""
+    owners: dict[str, set[str]] = {}
     with CORPUS_PATH.open(encoding="utf-8") as handle:
-        return {json.loads(line)["qualname"].split(".")[-1] for line in handle}
+        for line in handle:
+            owner, _, name = json.loads(line)["qualname"].rpartition(".")
+            owners.setdefault(name, set()).add(owner)
+    return owners
 
 
-def names_in_answer(body: str, known: set[str]) -> set[str]:
+def chain_before(code: str, dot: int) -> list[str]:
+    """Names of the expression ending just before `code[dot]`, nearest first.
+
+    For `df["a"].str.lower()` and the dot before `lower`, returns ['str', 'df'].
+    Brackets are skipped, so calls and indexers do not break the chain.
+    """
+    segments: list[str] = []
+    i = dot - 1
+    while True:
+        while i >= 0 and code[i] in OPENING:
+            depth, closer = 0, code[i]
+            while i >= 0:
+                if code[i] == closer:
+                    depth += 1
+                elif code[i] == OPENING[closer]:
+                    depth -= 1
+                    if depth == 0:
+                        break
+                i -= 1
+            i -= 1
+        if i >= 0 and code[i] in "'\"":
+            segments.append(STRING_LITERAL)
+            return segments
+        end = i + 1
+        while i >= 0 and (code[i].isalnum() or code[i] == "_"):
+            i -= 1
+        segments.append(code[i + 1 : end])
+        if i < 0 or code[i] != ".":
+            return segments
+        i -= 1
+
+
+def is_pandas_call(name: str, chain: list[str], owners: dict[str, set[str]]) -> bool:
+    if chain[-1] in FOREIGN_ROOTS or chain[-1] == STRING_LITERAL:
+        return False
+    if name in PYTHON_IN_PRACTICE:
+        return False
+    # Names pandas only offers through the `.str` accessor: `c.lower()` on a
+    # plain Python string is not pandas, `df["c"].str.lower()` is.
+    if owners.get(name) == {"StringMethods"}:
+        return chain[0] == "str"
+    return True
+
+
+def names_in_answer(body: str, owners: dict[str, set[str]]) -> set[str]:
     found: set[str] = set()
     for span in CODE_SPAN.findall(body):
         code = html.unescape(span)
-        found.update(ATTRIBUTE_USE.findall(code))
+        for match in ATTRIBUTE_USE.finditer(code):
+            name = match.group(1)
+            if is_pandas_call(name, chain_before(code, match.start()), owners):
+                found.add(name)
         found.update(QUALIFIED_MENTION.findall(code))
-    return found & known
+    return found & owners.keys()
 
 
 def main() -> None:
-    known = corpus_names()
+    owners = corpus_owners()
     questions = load_items("questions_page*.json")
     answers = {a["answer_id"]: a["body"] for a in load_items("answers_batch*.json")}
 
@@ -60,7 +120,7 @@ def main() -> None:
         body = answers.get(question.get("accepted_answer_id"))
         if body is None:
             continue
-        candidates.append((question, names_in_answer(body, known)))
+        candidates.append((question, names_in_answer(body, owners)))
 
     frequency = Counter(name for _, names in candidates for name in names)
 
