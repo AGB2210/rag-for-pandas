@@ -5,6 +5,8 @@
 torch==2.11.0
 sentence-transformers==6.0.1
 transformers==5.17.0
+datasets==5.0.1
+accelerate==1.15.0
 numpy==2.5.3
 rank-bm25==0.2.2
 httpx==0.28.1
