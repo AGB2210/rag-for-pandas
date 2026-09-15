@@ -206,3 +206,51 @@ answers is not known.
 
 **Decision:** C becomes the generation prompt. Citation remains the weak point: 28 of 40
 answers cite nothing.
+
+## 12. Answer generation on the gold set
+
+Prompt C, `Qwen2.5-1.5B-Instruct` and the hard-negative retriever's top 3 documents, run once
+on all 300 gold questions (about 18 minutes including model loading). Scored with the
+automatic checks fixed before the run.
+
+| Answerable questions (n=256) | |
+|---|---|
+| Retriever put a correct document in the 3 excerpts | 155 (61%) |
+| Answer cites an excerpt | 63 (25%) |
+| Answer cites a number with no excerpt | 0 (0%) |
+| Answer cites a correct document | 30 (12%) |
+| Answer wrongly abstains | 82 (32%) |
+
+| Subset | Measure | Result |
+|---|---|---|
+| Correct document retrieved (n=155) | Answer cites a correct document | 30 (19%) |
+| | Answer wrongly abstains | 41 (26%) |
+| No correct document retrieved (n=101) | Answer abstains | 41 (41%) |
+| Unanswerable (n=44) | Answer abstains | 20 (45%) |
+| | Answer cites an excerpt anyway | 7 (16%) |
+
+Reading a sample of answers showed that citation grading is both too strict and too
+lenient. Too strict: an answer recommending the right function `fillna` cited the `replace`
+excerpt, and an answer naming the right `reset_index` cited nothing. Too lenient: an answer
+correctly citing `to_json` suggested `orient='records'` without the needed `lines=True`, and
+another invented a `level='all'` argument. Some answers refused although the first excerpt
+held the answer.
+
+A second measure was added after that reading, not fixed in advance: whether the answer's
+text names a correct function as a whole word, regardless of citation.
+
+| Measure (added after reading answers) | Result |
+|---|---|
+| Answerable: names a correct function | 123/256 (48%) |
+| ... of those, also cites a correct document | 26/123 (21%) |
+| Correct document retrieved: names a correct function | 98/155 (63%) |
+| No correct document retrieved: names a correct function anyway | 25/101 (25%) |
+
+The last row is knowledge from the model itself rather than from the excerpts, which is
+the ungrounded behaviour citations are meant to expose.
+
+**Finding:** retrieval supplies a correct document for 61% of answerable questions, but the
+1.5B generator uses and cites it correctly for 19% of those. The generator, not retrieval,
+is now the weakest stage. Naming a correct function is far more common (63%) than citing it,
+so answers are more useful than the strict citation score suggests, but they are not
+reliably grounded.

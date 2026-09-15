@@ -29,6 +29,24 @@ Numbers are produced by `scripts/evaluate_retrieval.py`. Every experiment, inclu
 that did not work (such as cross-encoder reranking), is recorded in
 [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md).
 
+### Cited answers
+
+A local `Qwen2.5-1.5B-Instruct` writes a short answer from the top 3 documents and must cite
+them as `[1]`-`[3]` or say it could not find the answer. On the 256 answerable gold questions:
+
+| | Result |
+|---|---|
+| Retriever supplied a correct document in the top 3 | 61% |
+| Answer cites a correct document | 12% (19% when one was retrieved) |
+| Answer names a correct function, cited or not | 48% (63% when one was retrieved) |
+| Answer cites an excerpt that does not exist | 0% |
+| Answer says it could not find the answer, on the 44 unanswerable questions | 45% |
+
+Answer generation is the weakest stage: the small local model often names the right function
+without citing its source, and sometimes adds details that are not in the documentation.
+The "names a correct function" measure was added after reading answers; see experiment 12.
+Numbers are produced by `scripts/evaluate_generation.py`.
+
 ## How it works
 
 ```mermaid
@@ -55,6 +73,9 @@ flowchart LR
    normalised title; the split raises an error if any gold question gets through.
 5. **Training.** MultipleNegativesRankingLoss with one mined hard negative per pair: a
    document the base model ranks highly that is not a correct answer.
+6. **Answer generation.** The top 3 documents, numbered, go to a local language model with
+   rules to cite them and a fixed sentence for when they do not answer the question. The
+   prompt was chosen by comparing three prompts on validation questions.
 
 ## Setup
 
@@ -92,7 +113,11 @@ Then run the steps in order:
 .venv/Scripts/python scripts/train_retriever.py --seed 3
 .venv/Scripts/python scripts/train_retriever.py --hard-negatives --seed 3 --output-dir models/retriever-minilm-ft-hn
 .venv/Scripts/python scripts/evaluate_retrieval.py
+.venv/Scripts/python scripts/evaluate_generation.py
 ```
+
+`evaluate_generation.py` downloads `Qwen/Qwen2.5-1.5B-Instruct` (2.9 GB) on first use.
+Add `--from-saved` to print the summary again from the saved answers without regenerating.
 
 `fetch_stackoverflow.py` uses the anonymous Stack Exchange API (about 50 requests, within
 the 300-per-day limit) and caches every response. The results above use questions fetched
@@ -116,8 +141,10 @@ docs/              experiment log
   questions are unanswerable because of known corpus gaps (for example `dt.year`).
 - Silver labels are loose, which limits what training can learn; a cross-encoder reranker
   trained on them did not beat the retriever.
-- The model is small (22M parameters) and was trained on 1,233 questions.
-- There is no answer generation yet: the system returns documentation, not written answers.
+- The retriever is small (22M parameters) and was trained on 1,233 questions.
+- The answer generator is a 1.5B-parameter model chosen to fit a 4 GB GPU. Its answers are
+  checked only for citations and refusals, not for whether every statement is true, and
+  they often name functions without citing them or add details not in the documentation.
 
 ## Data and licences
 
