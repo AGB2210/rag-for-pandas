@@ -16,6 +16,7 @@ SILVER_QUERIES = Path("data/eval/queries.jsonl")
 TRAIN_QUERIES = Path("data/eval/train.jsonl")
 VALIDATION_QUERIES = Path("data/eval/validation.jsonl")
 LABEL_REVIEW = Path("data/eval/label_review.csv")
+GOLD_ANSWERS = Path("data/eval/gold_answers.jsonl")
 
 # Models
 FINETUNED_MODEL = Path("models/retriever-minilm-ft")
