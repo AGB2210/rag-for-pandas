@@ -174,12 +174,33 @@ Environment variables:
 
 `scripts/smoke_test_api.py` starts the real server, checks every endpoint and stops it.
 
+## Web page
+
+A React page (Vite, TypeScript) in `frontend/` asks questions or searches the documentation.
+It shows each answer with its sources, marks which sources were cited, and warns when an answer
+cites nothing, cites a source that does not exist, or when the documentation did not answer the
+question. Search results link to the pandas source file at the pinned commit.
+
+Requires Node.js 24 (developed with 24.16.0):
+
+```bash
+cd frontend
+npm install
+npm test
+npm run build
+```
+
+`npm test` runs component tests against a fake API. `npm run build` type-checks the code and
+writes the page to `frontend/dist`; when that folder exists, the API server above also serves the
+page at `http://127.0.0.1:8000/`, from the same origin as the API.
+
 ## Repository layout
 
 ```
-src/docsearch/     pipeline logic, one module per step
+src/docsearch/     pipeline logic, one module per step, and the API
 scripts/           command-line entry points for each step
-tests/             unit tests
+tests/             Python unit and API tests
+frontend/          React web page and its component tests
 annotations/       hand-made gold labels (tracked; everything under data/ is generated)
 docs/              experiment log
 ```
