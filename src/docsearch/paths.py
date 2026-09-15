@@ -20,4 +20,5 @@ LABEL_REVIEW = Path("data/eval/label_review.csv")
 # Models
 FINETUNED_MODEL = Path("models/retriever-minilm-ft")
 HARD_NEGATIVE_MODEL = Path("models/retriever-minilm-ft-hn")
+RERANKER_MODEL = Path("models/reranker-minilm-ft")
 CHECKPOINTS = Path("models/checkpoints")
