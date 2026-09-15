@@ -13,6 +13,10 @@ models/
 *.faiss
 *.npy
 
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+
 # Experiment tracking output
 mlruns/
 

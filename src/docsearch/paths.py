@@ -23,3 +23,6 @@ FINETUNED_MODEL = Path("models/retriever-minilm-ft")
 HARD_NEGATIVE_MODEL = Path("models/retriever-minilm-ft-hn")
 RERANKER_MODEL = Path("models/reranker-minilm-ft")
 CHECKPOINTS = Path("models/checkpoints")
+
+# Built web page (npm run build in frontend/)
+FRONTEND_BUILD = Path("frontend/dist")

@@ -13,9 +13,13 @@ from contextlib import asynccontextmanager
 from dataclasses import asdict
 from typing import Annotated
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, StringConstraints
 
+from docsearch.paths import FRONTEND_BUILD
 from docsearch.pipeline import Pipeline, load_pipeline
 
 MAX_QUERY_CHARS = 500
@@ -67,8 +71,12 @@ class HealthResponse(BaseModel):
     answers_enabled: bool
 
 
-def create_app(load: Callable[[], Pipeline] = load_pipeline) -> FastAPI:
-    """Build the app. Tests pass a `load` function that returns a pipeline with fake models."""
+def create_app(load: Callable[[], Pipeline] = load_pipeline, frontend: Path | None = FRONTEND_BUILD) -> FastAPI:
+    """Build the app.
+
+    Tests pass a `load` function that returns a pipeline with fake models. If
+    `frontend` is a folder that exists, the built web page is served from it.
+    """
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -111,6 +119,11 @@ def create_app(load: Callable[[], Pipeline] = load_pipeline) -> FastAPI:
             sources=[AnswerSource(**asdict(source)) for source in result.sources],
             invalid_citations=result.invalid_citations,
         )
+
+    # Mounted last: routes registered earlier (the API and /docs) are matched first,
+    # so the page cannot hide them. html=True serves index.html for "/".
+    if frontend is not None and frontend.is_dir():
+        app.mount("/", StaticFiles(directory=frontend, html=True), name="frontend")
 
     return app
 

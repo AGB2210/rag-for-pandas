@@ -29,8 +29,8 @@ class FakeGenerator:
         return self.answer
 
 
-def make_client(generator):
-    app = create_app(lambda: Pipeline(DOCS, FakeRetriever(), generator))
+def make_client(generator, frontend=None):
+    app = create_app(lambda: Pipeline(DOCS, FakeRetriever(), generator), frontend=frontend)
     return TestClient(app)
 
 
@@ -100,6 +100,22 @@ def test_answer_is_unavailable_without_a_generator():
         assert response.status_code == 503
         # Search still works without a generator.
         assert test_client.post("/search", json={"query": "delete empty rows"}).status_code == 200
+
+
+def test_serves_the_built_page_without_hiding_the_api(tmp_path):
+    (tmp_path / "index.html").write_text("<!doctype html><title>docsearch page</title>", encoding="utf-8")
+    with make_client(FakeGenerator("unused"), frontend=tmp_path) as test_client:
+        page = test_client.get("/")
+        assert page.status_code == 200
+        assert "docsearch page" in page.text
+        assert test_client.get("/health").json()["documents"] == 3
+        assert test_client.post("/search", json={"query": "delete empty rows"}).status_code == 200
+        assert test_client.get("/docs").status_code == 200
+
+
+def test_no_page_is_served_when_the_build_folder_is_missing(tmp_path):
+    with make_client(FakeGenerator("unused"), frontend=tmp_path / "missing") as test_client:
+        assert test_client.get("/").status_code == 404
 
 
 def test_invalid_answer_request_never_reaches_the_generator():
