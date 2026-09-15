@@ -1,18 +1,15 @@
-"""Measure the API documentation embedded in pandas source code.
+"""Extract the documentation corpus from a pandas source checkout.
 
-Exploration script for corpus design: answers how much docstring text exists
-and whether it is usable, before committing to an ingestion pipeline.
+pandas is parsed with `ast` rather than imported, so extraction works on plain
+source files and never runs pandas code.
 """
 
 from __future__ import annotations
 
 import ast
 import inspect
-import json
+from dataclasses import dataclass
 from pathlib import Path
-
-PANDAS_PACKAGE = Path("data/raw/pandas/pandas")
-OUTPUT_PATH = Path("data/interim/docstrings.jsonl")
 
 # Subpackages holding the public API. Excludes _libs (Cython internals),
 # tests, and compat shims: users never ask questions about those.
@@ -23,21 +20,11 @@ INCLUDE_SUBPACKAGES = ("core", "io", "plotting", "errors", "api", "_config")
 # They add noise to a retrieval index without answering any real question.
 MIN_DOCSTRING_WORDS = 20
 
-# Modules whose __all__ lists define what pandas officially exports.
-EXPORT_FILES = (
-    "__init__.py",
-    "arrays/__init__.py",
-    "plotting/__init__.py",
-    "errors/__init__.py",
-    "core/dtypes/api.py",
-    *(str(p.relative_to(PANDAS_PACKAGE)) for p in sorted((PANDAS_PACKAGE / "api").rglob("__init__.py"))),
-)
-
 # Not exported by name, but users reach their methods through public objects:
 # base classes (DataFrame.to_csv lives on NDFrame) and accessors (Series.str,
 # Series.dt, DataFrame.style). Taken from the Accessor(...) assignments in
 # frame.py, series.py and indexes/base.py.
-USER_REACHABLE_CLASSES = {
+USER_REACHABLE_CLASSES = frozenset({
     "NDFrame", "IndexOpsMixin", "IndexingMixin",
     "GroupBy", "BaseGroupBy",
     "DatetimeIndexOpsMixin", "DatetimeTimedeltaMixin",
@@ -45,7 +32,38 @@ USER_REACHABLE_CLASSES = {
     "DatetimeProperties", "TimedeltaProperties", "PeriodProperties",
     "SparseAccessor", "SparseFrameAccessor", "StructAccessor", "ListAccessor",
     "Styler", "StylerRenderer",
-}
+})
+
+
+@dataclass
+class Extraction:
+    records: list[dict]  # public documentation only
+    files_parsed: int
+    files_failed: int
+    found: int  # records before dropping internal names
+
+
+def document_text(doc: dict) -> str:
+    """The text every search method sees for a document.
+
+    All methods must see identical text; otherwise a comparison measures the
+    input rather than the search method.
+    """
+    return f"{doc['qualname']}: {doc['docstring']}"
+
+
+def final_name(qualname: str) -> str:
+    """'DataFrame.dropna' -> 'dropna'. Labels and search results are compared by this name."""
+    return qualname.split(".")[-1]
+
+
+def corpus_owners(docs: list[dict]) -> dict[str, set[str]]:
+    """Map each final name to the classes documenting it: 'lower' -> {'StringMethods'}."""
+    owners: dict[str, set[str]] = {}
+    for doc in docs:
+        owner, _, name = doc["qualname"].rpartition(".")
+        owners.setdefault(name, set()).add(owner)
+    return owners
 
 
 def is_public(name: str) -> bool:
@@ -53,12 +71,17 @@ def is_public(name: str) -> bool:
     return not name.startswith("_")
 
 
-def exported_names() -> set[str]:
+def export_files(package: Path) -> list[Path]:
+    """Modules whose __all__ lists define what pandas officially exports."""
+    fixed = ["__init__.py", "arrays/__init__.py", "plotting/__init__.py", "errors/__init__.py", "core/dtypes/api.py"]
+    return [package / name for name in fixed] + sorted((package / "api").rglob("__init__.py"))
+
+
+def exported_names(package: Path) -> set[str]:
     """Every top-level name a user can reach from `import pandas`."""
     names = set(USER_REACHABLE_CLASSES)
-    for relative in EXPORT_FILES:
-        tree = ast.parse((PANDAS_PACKAGE / relative).read_text(encoding="utf-8"))
-        for node in tree.body:
+    for path in export_files(package):
+        for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", "") == "__all__":
                 names.update(ast.literal_eval(node.value))
     return names
@@ -136,13 +159,12 @@ def record(docstring: str | None, qualname: str, kind: str, source_file: Path, o
     )
 
 
-def main() -> None:
+def extract(package: Path) -> Extraction:
+    """Parse the included subpackages and keep documentation for user-reachable names."""
     records: list[dict] = []
-    files_parsed = 0
-    files_failed = 0
-
+    files_parsed = files_failed = 0
     for subpackage in INCLUDE_SUBPACKAGES:
-        for path in (PANDAS_PACKAGE / subpackage).rglob("*.py"):
+        for path in (package / subpackage).rglob("*.py"):
             if "tests" in path.parts:
                 continue
             try:
@@ -153,25 +175,6 @@ def main() -> None:
             files_parsed += 1
             collect(tree, "", path, records)
 
-    exported = exported_names()
-    extracted = len(records)
-    records = [r for r in records if r["qualname"].split(".")[0] in exported]
-
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with OUTPUT_PATH.open("w", encoding="utf-8") as handle:
-        for record_ in records:
-            handle.write(json.dumps(record_) + "\n")
-
-    total_words = sum(r["word_count"] for r in records)
-    print(f"files parsed:     {files_parsed}")
-    print(f"files failed:     {files_failed}")
-    print(f"docstrings found: {extracted}")
-    print(f"dropped internal: {extracted - len(records)}")
-    print(f"docstrings kept:  {len(records)}")
-    print(f"total words:      {total_words:,}")
-    print(f"median words:     {sorted(r['word_count'] for r in records)[len(records) // 2]}")
-    print(f"written to:       {OUTPUT_PATH}")
-
-
-if __name__ == "__main__":
-    main()
+    exported = exported_names(package)
+    public = [r for r in records if r["qualname"].split(".")[0] in exported]
+    return Extraction(public, files_parsed, files_failed, len(records))

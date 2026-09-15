@@ -1,159 +1,24 @@
-"""Measure BM25 and embedding search on the Stack Overflow evaluation set."""
+"""Compare BM25, base embeddings and fine-tuned retrievers on silver validation and gold queries.
+
+Usage: python scripts/evaluate_retrieval.py
+"""
 
 from __future__ import annotations
 
-import csv
-import json
-import re
-from pathlib import Path
-
-import numpy as np
-from rank_bm25 import BM25Okapi
-from sentence_transformers import SentenceTransformer
-
-CORPUS_PATH = Path("data/interim/docstrings.jsonl")
-# Only the validation split: the fine-tuned model has seen the train split, so
-# scoring it on all silver queries would reward memorisation.
-VALIDATION_PATH = Path("data/eval/validation.jsonl")
-GOLD_PATH = Path("annotations/gold_queries.csv")
-EMBEDDINGS_CACHE = Path("data/interim/embeddings.npy")
-MODEL_NAME = "all-MiniLM-L6-v2"
-FINETUNED_MODEL = Path("models/retriever-minilm-ft")
-HARD_NEGATIVE_MODEL = Path("models/retriever-minilm-ft-hn")
-K_VALUES = (1, 5, 10)
-CI_K = 5
-BOOTSTRAP_SAMPLES = 10_000
-SEED = 0
-
-
-def load_jsonl(path: Path) -> list[dict]:
-    with path.open(encoding="utf-8") as handle:
-        return [json.loads(line) for line in handle]
-
-
-def document_text(doc: dict) -> str:
-    # Both methods must see identical text; otherwise the comparison measures
-    # the input rather than the search method.
-    return f"{doc['qualname']}: {doc['docstring']}"
-
-
-def tokenize(text: str) -> list[str]:
-    # \w+ splits "DataFrame.dropna" into "dataframe" and "dropna" so a query
-    # containing "dropna" can match. A sloppy tokenizer would weaken the
-    # baseline and exaggerate every later improvement.
-    return re.findall(r"\w+", text.lower())
-
-
-def bm25_rankings(docs: list[dict], queries: list[dict], depth: int) -> list[np.ndarray]:
-    index = BM25Okapi([tokenize(document_text(d)) for d in docs])
-    return [np.argsort(-index.get_scores(tokenize(q["query"])))[:depth] for q in queries]
-
-
-def embedding_rankings(
-    docs: list[dict], queries: list[dict], depth: int, model_name: str = MODEL_NAME, cache: Path | None = EMBEDDINGS_CACHE
-) -> list[np.ndarray]:
-    # Pass cache=None for a model that gets retrained: the size check below
-    # cannot tell old vectors from new ones when the corpus is unchanged.
-    model = SentenceTransformer(model_name)
-    doc_vectors = np.load(cache) if cache is not None and cache.exists() else None
-    # A cache built from a different corpus would silently return wrong results.
-    if doc_vectors is None or doc_vectors.shape[0] != len(docs):
-        doc_vectors = model.encode(
-            [document_text(d) for d in docs], normalize_embeddings=True, batch_size=64
-        )
-        if cache is not None:
-            np.save(cache, doc_vectors)
-
-    query_vectors = model.encode([q["query"] for q in queries], normalize_embeddings=True)
-    scores = query_vectors @ doc_vectors.T
-    return [np.argsort(-row)[:depth] for row in scores]
-
-
-def hits_at_k(rankings: list[np.ndarray], docs: list[dict], queries: list[dict], k: int) -> np.ndarray:
-    """1.0 for each query with at least one correct name in the top k results, else 0.0."""
-    return np.array(
-        [
-            bool({docs[i]["qualname"].split(".")[-1] for i in ranking[:k]} & set(query["labels"]))
-            for ranking, query in zip(rankings, queries)
-        ],
-        dtype=float,
-    )
-
-
-def recall_at_k(rankings: list[np.ndarray], docs: list[dict], queries: list[dict], k: int) -> float:
-    """Fraction of queries where at least one correct name is in the top k results."""
-    return float(hits_at_k(rankings, docs, queries, k).mean())
-
-
-def paired_bootstrap_ci(baseline: np.ndarray, candidate: np.ndarray) -> tuple[float, float]:
-    """95% interval for the mean per-query gap `candidate - baseline`.
-
-    Resamples queries with replacement. It is paired: each resample keeps both
-    methods' results for the same queries, so how hard a query is cancels out
-    and only the difference between the methods varies.
-    """
-    rng = np.random.default_rng(SEED)
-    picks = rng.integers(0, len(baseline), size=(BOOTSTRAP_SAMPLES, len(baseline)))
-    gaps = (candidate[picks] - baseline[picks]).mean(axis=1)
-    low, high = np.percentile(gaps, [2.5, 97.5])
-    return float(low), float(high)
-
-
-def load_gold() -> tuple[list[dict], list[dict]]:
-    """Hand-labelled queries, as lenient (any correct name) and strict (primary only) copies.
-
-    Questions marked unanswerable are left out: no document can be retrieved
-    for them, so they would only lower every method's score by the same amount.
-    """
-    with GOLD_PATH.open(encoding="utf-8") as handle:
-        rows = [row for row in csv.DictReader(handle) if row["answerable"] == "yes"]
-    lenient, strict = [], []
-    for row in rows:
-        query_words = set(re.findall(r"\w+", row["query"].lower()))
-        base = {"query": row["query"], "label_in_query": row["primary"].lower() in query_words}
-        lenient.append({**base, "labels": [row["primary"], *row["also_correct"].split()]})
-        strict.append({**base, "labels": [row["primary"]]})
-    return lenient, strict
-
-
-def report(title: str, docs: list[dict], queries: list[dict], methods: dict[str, list[np.ndarray]]) -> None:
-    subsets = {
-        "ALL QUERIES": list(range(len(queries))),
-        "NAME IN TITLE (easy)": [i for i, q in enumerate(queries) if q["label_in_query"]],
-        "NAME NOT IN TITLE (honest test)": [i for i, q in enumerate(queries) if not q["label_in_query"]],
-    }
-    print(f"\n===== {title} =====")
-    for subset_name, indices in subsets.items():
-        subset_queries = [queries[i] for i in indices]
-        print(f"\n{subset_name}  (n={len(indices)})")
-        print(f"  {'method':<14}" + "".join(f"{'R@' + str(k):>8}" for k in K_VALUES))
-        for method_name, rankings in methods.items():
-            subset_rankings = [rankings[i] for i in indices]
-            values = [recall_at_k(subset_rankings, docs, subset_queries, k) for k in K_VALUES]
-            print(f"  {method_name:<14}" + "".join(f"{v:>8.2f}" for v in values))
-        names = list(methods)
-        # Each method against the one before it, then the final method against BM25.
-        comparisons = list(zip(names, names[1:]))
-        if len(names) > 2:
-            comparisons.append((names[0], names[-1]))
-        for baseline_name, candidate_name in comparisons:
-            baseline, candidate = (
-                hits_at_k([methods[name][i] for i in indices], docs, subset_queries, CI_K)
-                for name in (baseline_name, candidate_name)
-            )
-            low, high = paired_bootstrap_ci(baseline, candidate)
-            gap = candidate.mean() - baseline.mean()
-            print(
-                f"  {candidate_name} - {baseline_name} at R@{CI_K}: {gap:+.2f}"
-                f"   95% CI [{low:+.2f}, {high:+.2f}]"
-            )
+from docsearch import paths
+from docsearch.evaluation import K_VALUES, report_lines
+from docsearch.gold import gold_queries, read_gold_rows
+from docsearch.jsonl import load_jsonl
+from docsearch.retrieval import bm25_rankings, embedding_rankings
 
 
 def main() -> None:
-    docs = load_jsonl(CORPUS_PATH)
+    docs = load_jsonl(paths.CORPUS)
     depth = max(K_VALUES)
-    silver = load_jsonl(VALIDATION_PATH)
-    gold_lenient, gold_strict = load_gold()
+    # Only the validation split: the fine-tuned models have seen the train split,
+    # so scoring them on all silver queries would reward memorisation.
+    silver = load_jsonl(paths.VALIDATION_QUERIES)
+    gold_lenient, gold_strict = gold_queries(read_gold_rows())
 
     for title, queries in [
         ("SILVER VALIDATION: automatic labels, held out from training", silver),
@@ -164,11 +29,13 @@ def main() -> None:
             "BM25": bm25_rankings(docs, queries, depth),
             "Embeddings": embedding_rankings(docs, queries, depth),
         }
-        if FINETUNED_MODEL.exists():
-            methods["Fine-tuned"] = embedding_rankings(docs, queries, depth, str(FINETUNED_MODEL), cache=None)
-        if HARD_NEGATIVE_MODEL.exists():
-            methods["Fine-tuned+HN"] = embedding_rankings(docs, queries, depth, str(HARD_NEGATIVE_MODEL), cache=None)
-        report(title, docs, queries, methods)
+        if paths.FINETUNED_MODEL.exists():
+            methods["Fine-tuned"] = embedding_rankings(docs, queries, depth, str(paths.FINETUNED_MODEL), cache=None)
+        if paths.HARD_NEGATIVE_MODEL.exists():
+            methods["Fine-tuned+HN"] = embedding_rankings(
+                docs, queries, depth, str(paths.HARD_NEGATIVE_MODEL), cache=None
+            )
+        print("\n".join(report_lines(title, docs, queries, methods)))
 
 
 if __name__ == "__main__":
