@@ -9,7 +9,6 @@ the negatives, including the other documents in the same batch.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Protocol
 
 import numpy as np
 import torch
@@ -25,6 +24,7 @@ from sentence_transformers.sentence_transformer.losses.multiple_negatives_rankin
 
 from docsearch.corpus import document_text, final_name
 from docsearch.paths import CHECKPOINTS
+from docsearch.retrieval import Encoder
 
 # Questions whose answers call many functions have mostly incidental labels;
 # the label review found half of all labels loose.
@@ -42,10 +42,6 @@ BATCH_SIZE = 32
 LEARNING_RATE = 2e-5
 WARMUP_FRACTION = 0.1
 SEED = 42
-
-
-class Encoder(Protocol):
-    def encode(self, sentences: list[str], normalize_embeddings: bool, batch_size: int) -> np.ndarray: ...
 
 
 def owner_rank(qualname: str) -> int:

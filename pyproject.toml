@@ -11,12 +11,14 @@ requires-python = ">=3.12"
 dependencies = [
     "accelerate",
     "datasets",
+    "fastapi",
     "httpx",
     "numpy",
     "rank-bm25",
     "sentence-transformers",
     "torch",
     "transformers",
+    "uvicorn",
 ]
 
 [project.optional-dependencies]
