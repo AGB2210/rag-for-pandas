@@ -124,6 +124,56 @@ the 300-per-day limit) and caches every response. The results above use question
 on 2026-09-13. Those responses are not redistributed, and vote order changes over time, so
 a fresh fetch gives a different silver set; the gold question ids stay fixed.
 
+## Running the API
+
+After the pipeline has been run (the service needs the corpus and the trained retriever):
+
+```bash
+.venv/Scripts/python -m uvicorn docsearch.api:app --port 8000
+```
+
+Interactive documentation is at `http://127.0.0.1:8000/docs`. Models load once at startup.
+
+| Endpoint | Request | Returns |
+|---|---|---|
+| `GET /health` | | status, number of documents, whether answers are enabled |
+| `POST /search` | `{"query": "...", "k": 5}` | top k documents with score, excerpt and source file |
+| `POST /answer` | `{"question": "..."}` | an answer, whether it abstained, and the 3 sources it could cite |
+
+Queries must be 1-500 characters after trimming whitespace, and `k` must be 1-20; other
+requests get HTTP 422. Only one answer is generated at a time; searches do not wait for it.
+
+```bash
+curl -X POST http://127.0.0.1:8000/answer -H "Content-Type: application/json" -d '{"question": "How do I delete rows that contain missing values?"}'
+```
+
+A response from the service on the development machine:
+
+```json
+{
+  "question": "How do I delete rows that contain missing values?",
+  "answer": "To remove rows containing missing values, use `DataFrame.dropna` with the parameter `how='any'`. This will remove any row where at least one value is missing.",
+  "abstained": false,
+  "sources": [
+    {"number": 1, "name": "DataFrame.dropna", "cited": false},
+    {"number": 2, "name": "Categorical.isnull", "cited": false},
+    {"number": 3, "name": "Categorical.isna", "cited": false}
+  ],
+  "invalid_citations": []
+}
+```
+
+The answer names the right function but cites nothing, which is typical of the small
+generator (see the cited-answers results above).
+
+Environment variables:
+
+- `DOCSEARCH_RETRIEVER`: retriever model folder or name (default `models/retriever-minilm-ft-hn`)
+- `DOCSEARCH_GENERATOR`: generator model name (default `Qwen/Qwen2.5-1.5B-Instruct`), or `none`
+  to serve search only; `/answer` then returns HTTP 503
+
+`scripts/smoke_test_api.py` starts the real server, checks every endpoint and stops it.
+
 ## Repository layout
 
 ```
