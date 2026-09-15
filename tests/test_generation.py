@@ -1,5 +1,6 @@
 from docsearch.generation import (
     NOT_FOUND,
+    RULES,
     SYSTEM_PROMPT,
     build_messages,
     cited_indices,
@@ -22,15 +23,23 @@ def test_excerpt_cuts_long_docstrings_but_keeps_line_breaks():
     assert excerpt(doc, max_words=10) == "f: one two\nthree four five"
 
 
-def test_build_messages_numbers_excerpts_and_includes_the_question():
-    system, user = build_messages("delete empty rows", DOCS)
+def test_build_messages_shows_examples_then_the_real_question():
+    messages = build_messages("delete empty rows", DOCS)
 
-    assert system == {"role": "system", "content": SYSTEM_PROMPT}
-    assert NOT_FOUND in SYSTEM_PROMPT
-    assert user["role"] == "user"
-    assert "[1] DataFrame.dropna: Remove missing values." in user["content"]
-    assert "[3] read_csv:" in user["content"]
-    assert user["content"].endswith("Question: delete empty rows")
+    assert [m["role"] for m in messages] == ["system", "user", "assistant", "user", "assistant", "user"]
+    assert messages[0]["content"] == SYSTEM_PROMPT
+    assert "[1]" in messages[2]["content"]  # the first example answer is cited
+    assert messages[4]["content"] == NOT_FOUND  # the second example teaches abstention
+
+
+def test_real_question_has_numbered_excerpts_and_rules_last():
+    question = build_messages("delete empty rows", DOCS)[-1]["content"]
+
+    assert "[1] DataFrame.dropna: Remove missing values." in question
+    assert "[3] read_csv:" in question
+    assert "Question: delete empty rows" in question
+    assert question.endswith(RULES)
+    assert NOT_FOUND in RULES
 
 
 def test_cited_indices_are_distinct_valid_and_in_order():

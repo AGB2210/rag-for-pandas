@@ -4,6 +4,10 @@ The generator is an interface, so a local model and an API model are
 interchangeable. Answers must cite the excerpts they use as [1], [2], ... and
 must say so when the excerpts do not answer the question. Both behaviours can
 be checked automatically, without a second model judging the answer.
+
+The prompt was chosen with scripts/compare_prompts.py on 40 validation
+questions: putting the rules after the question and showing two worked
+examples raised the share of answers with a citation from 2/40 to 12/40.
 """
 
 from __future__ import annotations
@@ -18,12 +22,28 @@ CONTEXT_DOCS = 3
 MAX_EXCERPT_WORDS = 200
 NOT_FOUND = "I could not find this in the pandas documentation."
 
-SYSTEM_PROMPT = (
-    "You answer questions about pandas using only the numbered documentation excerpts provided. "
-    "Name the pandas function that solves the problem and give a short example when the excerpts contain one. "
-    "Cite every excerpt you use by its number in square brackets, like [1]. "
-    f'If the excerpts do not answer the question, reply exactly: "{NOT_FOUND}"'
+SYSTEM_PROMPT = "You are a pandas documentation assistant."
+# Placed after the question, closest to where the model starts writing: a
+# small model follows those instructions more reliably than ones read earlier.
+RULES = (
+    "Rules:\n"
+    "- Use only the excerpts above. Do not rely on anything else you know.\n"
+    "- Answer in at most 4 sentences and name the pandas function to use.\n"
+    "- End every sentence that uses an excerpt with its number in square brackets, like [2].\n"
+    "- Do not invent example output.\n"
+    f'- If no excerpt answers the question, reply exactly: "{NOT_FOUND}"'
 )
+
+# Worked examples shown before the real question (few-shot prompting). The
+# second one teaches abstention: its excerpts do not answer it.
+EXAMPLE_EXCERPTS = (
+    "[1] DataFrame.dropna: Remove missing values.\n\n"
+    "[2] DataFrame.fillna: Fill NA/NaN values using the specified method."
+)
+EXAMPLES = [
+    ("How do I delete rows with empty cells?", "Use DataFrame.dropna, which removes rows that contain missing values [1]."),
+    ("How do I read an Excel file?", NOT_FOUND),
+]
 
 CITATION = re.compile(r"\[(\d+)\]")
 NON_SPACE = re.compile(r"\S+")
@@ -42,13 +62,22 @@ def excerpt(doc: dict, max_words: int = MAX_EXCERPT_WORDS) -> str:
     return f"{doc['qualname']}: {text}"
 
 
+def numbered_context(docs: list[dict]) -> str:
+    return "\n\n".join(f"[{number}] {excerpt(doc)}" for number, doc in enumerate(docs, start=1))
+
+
+def user_message(question: str, context: str) -> str:
+    return f"Excerpts:\n\n{context}\n\nQuestion: {question}\n\n{RULES}"
+
+
 def build_messages(question: str, docs: list[dict]) -> list[dict[str, str]]:
-    """Chat messages asking for an answer grounded in the numbered excerpts."""
-    context = "\n\n".join(f"[{number}] {excerpt(doc)}" for number, doc in enumerate(docs, start=1))
-    return [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": f"Documentation excerpts:\n\n{context}\n\nQuestion: {question}"},
-    ]
+    """Chat messages: the worked examples, then the real question with its numbered excerpts."""
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    for example_question, example_answer in EXAMPLES:
+        messages.append({"role": "user", "content": user_message(example_question, EXAMPLE_EXCERPTS)})
+        messages.append({"role": "assistant", "content": example_answer})
+    messages.append({"role": "user", "content": user_message(question, numbered_context(docs))})
+    return messages
 
 
 def cited_indices(answer: str, doc_count: int) -> list[int]:
