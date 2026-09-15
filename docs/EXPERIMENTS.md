@@ -178,3 +178,31 @@ typically preferring a near-duplicate function (`merge_ordered` over `merge`,
 **Decision:** no reranker beat the retriever on validation, so none was scored on gold
 and reranking is not part of the pipeline. Likely causes, not tested separately: loose
 training labels, 1,636 positive pairs, and a retriever already trained on near-misses.
+
+## 11. Answer generation: choosing a prompt
+
+Generator: `Qwen/Qwen2.5-1.5B-Instruct`, run locally in bfloat16 with greedy decoding. It
+fits the 4 GB GPU with a peak of about 3.1 GiB. Each answer is written from the hard-negative
+retriever's top 3 documents, each cut to 200 words, and must cite them as `[1]`-`[3]` or reply
+with an exact not-found sentence.
+
+A first check on 3 validation questions found no citations, invented example output,
+and an uncited answer from the model's own knowledge when the retrieved documents did not
+contain the answer.
+
+Three prompts were compared on 40 validation questions, all seeing the same retrieved
+documents. Scoring is automatic. In 26 questions a retrieved document carried a silver label
+("answer in context"); in 14 none did.
+
+| Prompt | Cites an excerpt | Cites a missing excerpt | Cites a labelled document | Abstains, answer in context | Abstains, answer not in context | s/answer |
+|---|---|---|---|---|---|---|
+| A: rules in the system message | 2/40 | 2/40 | 2/40 | 0/26 | 1/14 | 10.1 |
+| B: stricter rules after the question | 2/40 | 1/40 | 1/40 | 2/26 | 2/14 | 5.5 |
+| C: B plus two worked examples | 12/40 | 2/40 | 7/40 | 4/26 | 6/14 | 5.5 |
+
+B shortened answers but did not change citation behaviour; the worked examples did. B
+changed several things at once (rule placement and wording), so which part shortened the
+answers is not known.
+
+**Decision:** C becomes the generation prompt. Citation remains the weak point: 28 of 40
+answers cite nothing.
