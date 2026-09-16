@@ -8,6 +8,7 @@ from docsearch.generation import (
     excerpt,
     invalid_citations,
     is_abstention,
+    names_correct_function,
 )
 
 DOCS = [
@@ -58,3 +59,18 @@ def test_cites_correct_document_requires_a_cited_correct_name():
     assert cites_correct_document("Use dropna [1].", DOCS, ["dropna"])
     assert not cites_correct_document("Use fillna [2].", DOCS, ["dropna"])
     assert not cites_correct_document("Use dropna.", DOCS, ["dropna"])  # named but not cited
+
+
+def test_names_correct_function_matches_whole_names_only():
+    assert names_correct_function("Use `DataFrame.dropna()` here.", ["fillna", "dropna"])
+    assert not names_correct_function("Use dropna_all.", ["dropna"])
+    assert not names_correct_function("Use fillna.", ["dropna"])
+    assert not names_correct_function("Use dropna.", [])  # unanswerable questions have no labels
+
+
+def test_build_messages_uses_the_rules_and_examples_it_is_given():
+    messages = build_messages("q", DOCS, rules="Other rules", examples=[("example q", "example a")])
+
+    assert [m["role"] for m in messages] == ["system", "user", "assistant", "user"]
+    assert messages[1]["content"].endswith("Other rules")
+    assert messages[-1]["content"].endswith("Other rules")

@@ -34,19 +34,21 @@ that did not work (such as cross-encoder reranking), is recorded in
 ### Cited answers
 
 A local `Qwen2.5-1.5B-Instruct` writes a short answer from the top 3 documents and must cite
-them as `[1]`-`[3]` or say it could not find the answer. On the 256 answerable gold questions:
+them as `[1]`-`[3]` or say it could not find the answer. On the 259 answerable gold questions:
 
 | | Result |
 |---|---|
-| Retriever supplied a correct document in the top 3 | 61% |
-| Answer cites a correct document | 12% (19% when one was retrieved) |
-| Answer names a correct function, cited or not | 48% (63% when one was retrieved) |
-| Answer cites an excerpt that does not exist | 0% |
-| Answer says it could not find the answer, on the 44 unanswerable questions | 45% |
+| Retriever supplied a correct document in the top 3 | 60% |
+| Answer cites a correct document | 14% (22% when one was retrieved) |
+| Answer names a correct function, cited or not | 51% (65% when one was retrieved) |
+| Answer cites an excerpt that does not exist | 1 answer (under 1%) |
+| Answer says it could not find the answer, on the 41 unanswerable questions | 46% |
 
 Answer generation is the weakest stage: the small local model often names the right function
 without citing its source, and sometimes adds details that are not in the documentation.
 The "names a correct function" measure was added after reading answers; see experiment 12.
+Prompts that made the model cite more often also made it refuse more often, including when
+the answer was retrieved, so they were not adopted; see experiment 14.
 Numbers are produced by `scripts/evaluate_generation.py`.
 
 ## How it works
@@ -77,7 +79,7 @@ flowchart LR
    document the base model ranks highly that is not a correct answer.
 6. **Answer generation.** The top 3 documents, numbered, go to a local language model with
    rules to cite them and a fixed sentence for when they do not answer the question. The
-   prompt was chosen by comparing three prompts on validation questions.
+   prompt was chosen by comparing prompts on validation questions.
 
 ## Setup
 

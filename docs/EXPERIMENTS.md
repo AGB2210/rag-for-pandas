@@ -313,3 +313,70 @@ larger than that.
 **Decision:** keep the retrained model, since it is what the documented commands produce.
 Choosing the previous model because it scored higher on gold would select a model on the
 test set.
+
+## 14. Raising the citation rate (not adopted)
+
+Experiment 12 found that answers often name the right function without citing its excerpt.
+Two prompts aimed at that were compared with prompt C on validation questions, using the
+retriever from experiment 13. A decision rule was fixed before the first run: adopt the
+prompt with the most answers citing a labelled document, provided that (1) answers naming a
+labelled function fall by at most 5 against C, and (2) abstentions when no labelled document
+was retrieved do not fall.
+
+- **D**: write the excerpt number right after every function named, `DataFrame.dropna [1]`.
+- **E**: end with a fixed last line, `Sources: [1]`.
+
+Round 1, validation questions 1-100 (labelled document retrieved for 57, not for 43):
+
+| Prompt | Cites an excerpt | Cites a labelled document | Names a labelled function | Abstains, labelled doc retrieved | Abstains, not retrieved |
+|---|---|---|---|---|---|
+| C | 27 | 12 | 47 | 15/57 | 18/43 |
+| D | 9 | 3 | 35 | 25/57 | 23/43 |
+| E | 51 | 27 | 35 | 23/57 | 24/43 |
+
+E more than doubled correct citations but failed condition 1. Reading the 12 questions
+where C named a labelled function and E did not: E abstained in 9 of them, several with the
+answer in an excerpt (for example refusing a `reset_index` question with `reset_index` as
+excerpt 2). Some of C's named functions in those answers came with code the excerpts did
+not contain.
+
+- **F**: E, with the refusal rule narrowed: answer with an excerpt's function if it solves
+  the question even when the excerpt does not show the exact case, and refuse only when no
+  excerpt is about the question.
+
+Round 2, questions 101-200, not read before (labelled document retrieved for 60, not for
+40), so F was not tuned on the questions it was judged on:
+
+| Prompt | Cites an excerpt | Cites a labelled document | Names a labelled function | Abstains, labelled doc retrieved | Abstains, not retrieved |
+|---|---|---|---|---|---|
+| C | 27 | 15 | 45 | 16/60 | 17/40 |
+| E | 50 | 22 | 34 | 25/60 | 24/40 |
+| F | 59 | 24 | 38 | 20/60 | 21/40 |
+
+**Decision:** C stays. F raised correct citations from 15 to 24 but named a labelled
+function 7 fewer times, beyond the limit fixed in advance. The prompts trade citations for
+refusals: the stricter format makes the 1.5B model cite more often and also refuse more
+often, including when the answer was retrieved. Seconds per answer are not compared: the
+first round shared the machine with other work.
+
+## 15. Answer generation on gold after the corpus fix
+
+Prompt C was run once more on all 300 gold questions, because the retriever and corpus
+changed in experiment 13. The "names a correct function" measure is now computed by
+`scripts/evaluate_generation.py`; on the saved answers of experiment 12 it reproduces the
+hand-computed 123/256, 98/155 and 25/101.
+
+| Measure | Experiment 12 | Now |
+|---|---|---|
+| Answerable questions | 256 | 259 |
+| Correct document in the 3 excerpts | 155 (61%) | 156 (60%) |
+| Cites a correct document | 30 (12%) | 35 (14%) |
+| ... when a correct document was retrieved | 30/155 (19%) | 35/156 (22%) |
+| Names a correct function | 123 (48%) | 131 (51%) |
+| ... when a correct document was retrieved | 98/155 (63%) | 101/156 (65%) |
+| Cites a number with no excerpt | 0 | 1 |
+| Wrongly abstains | 82 (32%) | 80 (31%) |
+| Unanswerable: abstains | 20/44 (45%) | 19/41 (46%) |
+
+The prompt did not change; the differences are within what the retriever change in
+experiment 13 can explain and are not evidence of an improvement.

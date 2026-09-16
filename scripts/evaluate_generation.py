@@ -8,6 +8,10 @@ repeated for questions whose excerpts do contain a correct document, which
 separates generation failures from retrieval failures. For unanswerable
 questions, checks whether the answer abstains.
 
+Also measures whether the answer names a correct function at all, cited or
+not. That measure was first computed by hand after reading answers
+(experiment 12 in docs/EXPERIMENTS.md) and is now part of the script.
+
 Every answer is saved, so the summary can be printed again without
 regenerating (about 18 minutes on a 4 GB GPU) and answers can be read by hand.
 
@@ -30,6 +34,7 @@ from docsearch.generation import (
     cites_correct_document,
     invalid_citations,
     is_abstention,
+    names_correct_function,
 )
 from docsearch.gold import read_gold_rows
 from docsearch.jsonl import load_jsonl, write_jsonl
@@ -62,6 +67,7 @@ def generate_records() -> list[dict]:
             "cited": [context[i]["qualname"] for i in cited_indices(answer, len(context))],
             "invalid_citations": invalid_citations(answer, len(context)),
             "cites_correct": cites_correct_document(answer, context, labels),
+            "names_correct": names_correct_function(answer, labels),
             "abstained": is_abstention(answer),
         })
     return records
@@ -88,15 +94,18 @@ def summary_lines(records: list[dict]) -> list[str]:
         f"  answer cites an excerpt:                {rate(count(answerable, 'cited'), len(answerable))}",
         f"  answer cites a number with no excerpt:  {rate(count(answerable, 'invalid_citations'), len(answerable))}",
         f"  answer cites a correct document:        {rate(count(answerable, 'cites_correct'), len(answerable))}",
+        f"  answer names a correct function:        {rate(count(answerable, 'names_correct'), len(answerable))}",
         f"  answer wrongly abstains:                {rate(count(answerable, 'abstained'), len(answerable))}",
         "",
         f"answerable, correct document retrieved ({len(retrieved)})",
         f"  answer cites a correct document:        {rate(count(retrieved, 'cites_correct'), len(retrieved))}",
+        f"  answer names a correct function:        {rate(count(retrieved, 'names_correct'), len(retrieved))}",
         f"  answer cites an excerpt:                {rate(count(retrieved, 'cited'), len(retrieved))}",
         f"  answer wrongly abstains:                {rate(count(retrieved, 'abstained'), len(retrieved))}",
         "",
         f"answerable, no correct document retrieved ({len(missed)})",
         f"  answer abstains:                        {rate(count(missed, 'abstained'), len(missed))}",
+        f"  answer names a correct function anyway: {rate(count(missed, 'names_correct'), len(missed))}",
         "",
         f"unanswerable ({len(unanswerable)})",
         f"  answer abstains:                        {rate(count(unanswerable, 'abstained'), len(unanswerable))}",

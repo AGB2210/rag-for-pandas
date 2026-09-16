@@ -8,6 +8,9 @@ be checked automatically, without a second model judging the answer.
 The prompt was chosen with scripts/compare_prompts.py on 40 validation
 questions: putting the rules after the question and showing two worked
 examples raised the share of answers with a citation from 2/40 to 12/40.
+Prompts that forced citations harder (experiment 14 in docs/EXPERIMENTS.md)
+cited more but refused more often, even with the answer in an excerpt, so this
+prompt was kept.
 """
 
 from __future__ import annotations
@@ -66,17 +69,19 @@ def numbered_context(docs: list[dict]) -> str:
     return "\n\n".join(f"[{number}] {excerpt(doc)}" for number, doc in enumerate(docs, start=1))
 
 
-def user_message(question: str, context: str) -> str:
-    return f"Excerpts:\n\n{context}\n\nQuestion: {question}\n\n{RULES}"
+def user_message(question: str, context: str, rules: str = RULES) -> str:
+    return f"Excerpts:\n\n{context}\n\nQuestion: {question}\n\n{rules}"
 
 
-def build_messages(question: str, docs: list[dict]) -> list[dict[str, str]]:
+def build_messages(
+    question: str, docs: list[dict], rules: str = RULES, examples: list[tuple[str, str]] = EXAMPLES
+) -> list[dict[str, str]]:
     """Chat messages: the worked examples, then the real question with its numbered excerpts."""
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    for example_question, example_answer in EXAMPLES:
-        messages.append({"role": "user", "content": user_message(example_question, EXAMPLE_EXCERPTS)})
+    for example_question, example_answer in examples:
+        messages.append({"role": "user", "content": user_message(example_question, EXAMPLE_EXCERPTS, rules)})
         messages.append({"role": "assistant", "content": example_answer})
-    messages.append({"role": "user", "content": user_message(question, numbered_context(docs))})
+    messages.append({"role": "user", "content": user_message(question, numbered_context(docs), rules)})
     return messages
 
 
@@ -103,3 +108,11 @@ def is_abstention(answer: str) -> bool:
 def cites_correct_document(answer: str, docs: list[dict], labels: list[str]) -> bool:
     """Whether any cited excerpt is a document carrying a correct name."""
     return any(final_name(docs[i]["qualname"]) in labels for i in cited_indices(answer, len(docs)))
+
+
+def names_correct_function(answer: str, labels: list[str]) -> bool:
+    """Whether the answer text names a correct function as a whole word, cited or not.
+
+    `dropna` matches "DataFrame.dropna" and "`dropna()`" but not "dropna_all".
+    """
+    return any(re.search(rf"(?<!\w){re.escape(label)}(?!\w)", answer) for label in labels)
