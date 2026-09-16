@@ -194,6 +194,17 @@ npm run build
 writes the page to `frontend/dist`; when that folder exists, the API server above also serves the
 page at `http://127.0.0.1:8000/`, from the same origin as the API.
 
+Browser tests drive the whole system with Playwright: they build the page, start the real API
+server with the trained retriever, and use the page in the Chrome installed on the machine. They
+need the pipeline outputs, so they are run separately from `npm test`:
+
+```bash
+npm run e2e
+```
+
+Answers are turned off by default so the tests do not load the generator; set `E2E_ANSWERS=1` to
+also check a real answer and its sources.
+
 ## Repository layout
 
 ```
