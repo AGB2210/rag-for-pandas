@@ -25,7 +25,7 @@ questions are removed from training and validation data by
 | `notes` | Why a label was chosen, especially when it differs from the accepted answer |
 
 Names are the final segment of a documented name (`DataFrame.dropna` is
-`dropna`) and all exist in the corpus built by `scripts/measure_docstrings.py`.
+`dropna`) and all exist in the corpus built by `scripts/build_corpus.py`.
 
 Rules applied while labelling:
 
@@ -38,6 +38,10 @@ Rules applied while labelling:
   exists in pandas but not in the corpus (for example `dt.year`, whose
   documentation the extractor does not read), the row is marked `no` and its
   note starts with `corpus gap:`. Those rows list what a corpus fix should add.
+- After the corpus fix in experiment 13 of `docs/EXPERIMENTS.md`, rows whose
+  missing documentation was added were relabelled from their notes and now start
+  with `corpus gap fixed:`. The two `GroupBy.ngroups` rows stay unanswerable
+  because pandas has no docstring for it.
 
 ## Attribution
 

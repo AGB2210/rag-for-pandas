@@ -112,8 +112,8 @@ question_id,query,primary,also_correct,answerable,notes,url
 22137723,Convert number strings with commas in pandas DataFrame to float,read_csv,,yes,thousands separator,https://stackoverflow.com/questions/22137723/convert-number-strings-with-commas-in-pandas-dataframe-to-float
 44723183,Set value on an entire column of a pandas dataframe,copy,loc,yes,SettingWithCopyWarning,https://stackoverflow.com/questions/44723183/set-value-on-an-entire-column-of-a-pandas-dataframe
 32888124,pandas out of bounds nanosecond timestamp after offset rollforward plus adding a month offset,to_datetime,,yes,errors=coerce,https://stackoverflow.com/questions/32888124/pandas-out-of-bounds-nanosecond-timestamp-after-offset-rollforward-plus-adding-a
-20612645,How to find the installed pandas version,,,no,"corpus gap: show_versions lives in pandas/util, outside the corpus",https://stackoverflow.com/questions/20612645/how-to-find-the-installed-pandas-version
-28773342,Truncate `TimeStamp` column to hour precision in pandas `DataFrame`,,,no,corpus gap: dt.floor is defined on a class the public-API filter drops,https://stackoverflow.com/questions/28773342/truncate-timestamp-column-to-hour-precision-in-pandas-dataframe
+20612645,How to find the installed pandas version,show_versions,,yes,corpus gap fixed: show_versions added from pandas/util,https://stackoverflow.com/questions/20612645/how-to-find-the-installed-pandas-version
+28773342,Truncate `TimeStamp` column to hour precision in pandas `DataFrame`,floor,,yes,corpus gap fixed: dt.floor added from TimelikeOps,https://stackoverflow.com/questions/28773342/truncate-timestamp-column-to-hour-precision-in-pandas-dataframe
 38250710,"How to split data into 3 sets (train, validation and test)?",sample,,yes,answer splits with np.split after sample,https://stackoverflow.com/questions/38250710/how-to-split-data-into-3-sets-train-validation-and-test
 12389898,Python Pandas: how to add a totally new column to a data frame inside of a groupby/transform operation,apply,groupby transform,yes,,https://stackoverflow.com/questions/12389898/python-pandas-how-to-add-a-totally-new-column-to-a-data-frame-inside-of-a-group
 30808430,How to select columns from dataframe by regex,filter,,yes,,https://stackoverflow.com/questions/30808430/how-to-select-columns-from-dataframe-by-regex
@@ -186,7 +186,7 @@ question_id,query,primary,also_correct,answerable,notes,url
 23668427,pandas three-way joining multiple dataframes on columns,merge,,yes,,https://stackoverflow.com/questions/23668427/pandas-three-way-joining-multiple-dataframes-on-columns
 34789888,Convert datetime columns to a different timezone pandas,tz_convert,tz_localize,yes,,https://stackoverflow.com/questions/34789888/convert-datetime-columns-to-a-different-timezone-pandas
 26720916,Faster way to rank rows in subgroups in pandas dataframe,rank,groupby cumcount,yes,,https://stackoverflow.com/questions/26720916/faster-way-to-rank-rows-in-subgroups-in-pandas-dataframe
-46878156,Pandas filter dataframe rows with a specific year,,,no,"corpus gap: dt.year documentation is passed to _field_accessor, which the extractor does not read",https://stackoverflow.com/questions/46878156/pandas-filter-dataframe-rows-with-a-specific-year
+46878156,Pandas filter dataframe rows with a specific year,year,,yes,corpus gap fixed: dt.year added from _field_accessor,https://stackoverflow.com/questions/46878156/pandas-filter-dataframe-rows-with-a-specific-year
 48366506,Calculate new column as the mean of other columns in pandas,mean,loc,yes,,https://stackoverflow.com/questions/48366506/calculate-new-column-as-the-mean-of-other-columns-in-pandas
 29530232,How to check if any value is NaN in a Pandas DataFrame,isnull,any isna,yes,,https://stackoverflow.com/questions/29530232/how-to-check-if-any-value-is-nan-in-a-pandas-dataframe
 17751626,Create a pandas DataFrame from multiple dicts,DataFrame,from_dict from_records,yes,constructor,https://stackoverflow.com/questions/17751626/create-a-pandas-dataframe-from-multiple-dicts
@@ -290,7 +290,7 @@ question_id,query,primary,also_correct,answerable,notes,url
 11361985,Output data from all columns in a dataframe in pandas,set_option,values,yes,display options not in accepted answer,https://stackoverflow.com/questions/11361985/output-data-from-all-columns-in-a-dataframe-in-pandas
 17933282,Using numpy.genfromtxt to read a csv file with strings containing commas,read_csv,,yes,quotechar,https://stackoverflow.com/questions/17933282/using-numpy-genfromtxt-to-read-a-csv-file-with-strings-containing-commas
 26133538,round a single column in pandas,round,,yes,,https://stackoverflow.com/questions/26133538/round-a-single-column-in-pandas
-38792122,How to group and count rows by month and year using Pandas?,groupby,agg count,yes,dt.year / dt.month not in corpus,https://stackoverflow.com/questions/38792122/how-to-group-and-count-rows-by-month-and-year-using-pandas
+38792122,How to group and count rows by month and year using Pandas?,groupby,agg count year month,yes,corpus gap fixed: dt.year / dt.month added,https://stackoverflow.com/questions/38792122/how-to-group-and-count-rows-by-month-and-year-using-pandas
 35530640,"Pandas Use Value if Not Null, Else Use Value From Next Column",fillna,combine_first,yes,,https://stackoverflow.com/questions/35530640/pandas-use-value-if-not-null-else-use-value-from-next-column
 17193850,Get column by number in Pandas,iloc,loc,yes,,https://stackoverflow.com/questions/17193850/get-column-by-number-in-pandas
 41776801,What does In-place sort_values in pandas exactly mean?,sort_values,,yes,inplace,https://stackoverflow.com/questions/41776801/what-does-in-place-sort-values-in-pandas-exactly-mean

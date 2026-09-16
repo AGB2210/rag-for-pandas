@@ -22,6 +22,15 @@ class Frame:
 
     columns = AxisProperty(axis=0, doc="""{LONG}""")
 
+    year = _field_accessor("year", "Y", """{LONG}""")
+
+    days_docstring = textwrap.dedent("""{LONG}""")
+    days = _field_accessor("days", "days", days_docstring)
+
+    unknown = _field_accessor("unknown", missing_name)
+
+    constant = compute("""{LONG}""")
+
 
 def read_thing():
     """{LONG}"""
@@ -32,15 +41,18 @@ class _Hidden:
 '''
 
 
-def test_collect_records_classes_methods_aliases_and_doc_keywords():
+def test_collect_records_classes_methods_aliases_and_docstring_arguments():
     out: list[dict] = []
     collect(ast.parse(SOURCE), "", Path("pkg/module.py"), out)
 
+    # The docstring variable itself and calls to other functions are not documents.
     assert [(r["qualname"], r["kind"]) for r in out] == [
         ("Frame", "class"),
         ("Frame.aggregate", "function"),
         ("Frame.agg", "alias"),
         ("Frame.columns", "attribute"),
+        ("Frame.year", "attribute"),
+        ("Frame.days", "attribute"),
         ("read_thing", "function"),
     ]
     assert all(r["docstring"] == LONG and r["word_count"] == 25 for r in out)

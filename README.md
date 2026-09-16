@@ -10,8 +10,8 @@ small embedding model on Stack Overflow question/answer pairs.
 
 ## Results
 
-Gold test set: 300 hand-labelled Stack Overflow questions, 256 answerable from the corpus.
-The table shows the 189 questions whose answer's name does **not** appear in the question
+Gold test set: 300 hand-labelled Stack Overflow questions, 259 answerable from the corpus.
+The table shows the 191 questions whose answer's name does **not** appear in the question
 title, where keyword matching cannot help. R@5 is the share of questions with a correct
 function in the top 5 results.
 
@@ -19,11 +19,13 @@ function in the top 5 results.
 |---|---|---|
 | BM25 keyword search | 0.38 | 0.28 |
 | `all-MiniLM-L6-v2` embeddings | 0.42 | 0.32 |
-| Fine-tuned on Stack Overflow pairs | 0.50 | 0.35 |
-| **Fine-tuned with mined hard negatives** | **0.63** | **0.47** |
+| Fine-tuned on Stack Overflow pairs | 0.49 | 0.34 |
+| **Fine-tuned with mined hard negatives** | **0.61** | **0.43** |
 
-Final model vs BM25: +0.25 (95% CI [+0.17, +0.33]) and +0.19 (95% CI [+0.11, +0.26]).
+Final model vs BM25: +0.23 (95% CI [+0.16, +0.30]) and +0.15 (95% CI [+0.08, +0.23]).
 Paired bootstrap over questions; R@5 was fixed as the comparison metric in advance.
+Retraining with the same settings after a small data change moved these scores by 3-4
+points, so smaller differences between single training runs are not meaningful.
 
 Numbers are produced by `scripts/evaluate_retrieval.py`. Every experiment, including those
 that did not work (such as cross-encoder reranking), is recorded in
@@ -51,10 +53,10 @@ Numbers are produced by `scripts/evaluate_generation.py`.
 
 ```mermaid
 flowchart LR
-    A["pandas source<br/>(commit a183ef5)"] -->|parse with ast| B["Corpus<br/>1,223 API docstrings"]
-    C["Stack Overflow API<br/>2,500 questions"] --> D["Silver labels<br/>1,804 questions"]
+    A["pandas source<br/>(commit a183ef5)"] -->|parse with ast| B["Corpus<br/>1,265 API docstrings"]
+    C["Stack Overflow API<br/>2,500 questions"] --> D["Silver labels<br/>1,806 questions"]
     C --> E["Gold labels<br/>300 questions, by hand"]
-    D -->|remove gold, split| F["Train 1,233<br/>Validation 308"]
+    D -->|remove gold, split| F["Train 1,234<br/>Validation 308"]
     F -->|mine hard negatives| G["Fine-tuned retriever"]
     B --> H["Search"]
     G --> H
@@ -219,8 +221,8 @@ docs/              experiment log
 ## Limitations
 
 - Gold labels were made by a single annotator.
-- The corpus is API docstrings only; the pandas user guide is not included, and 5 gold
-  questions are unanswerable because of known corpus gaps (for example `dt.year`).
+- The corpus is API docstrings only; the pandas user guide is not included, and 2 gold
+  questions are unanswerable because pandas has no docstring for `GroupBy.ngroups`.
 - Silver labels are loose, which limits what training can learn; a cross-encoder reranker
   trained on them did not beat the retriever.
 - The retriever is small (22M parameters) and was trained on 1,233 questions.

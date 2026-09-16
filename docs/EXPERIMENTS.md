@@ -254,3 +254,62 @@ the ungrounded behaviour citations are meant to expose.
 is now the weakest stage. Naming a correct function is far more common (63%) than citing it,
 so answers are more useful than the strict citation score suggests, but they are not
 reliably grounded.
+
+## 13. Closing corpus gaps
+
+While labelling gold, 5 questions were marked unanswerable because their answer exists in
+pandas but not in the corpus. Each had a different cause:
+
+| Question needs | Why it was missing | Fix |
+|---|---|---|
+| `show_versions` | lives in `pandas/util`, which was not parsed | parse `util`; the public-name filter still drops its internal helpers |
+| `dt.year` and other date fields | docstring passed as an argument: `year = _field_accessor("year", "Y", """...""")` | read the last argument of `_field_accessor`, including names bound to `textwrap.dedent("""...""")` |
+| `dt.floor` | defined on `TimelikeOps`, a base class the filter dropped | add `DatelikeOps` and `TimelikeOps` to the user-reachable classes |
+| `GroupBy.ngroups` (2 questions) | has no docstring in the pandas source | none; writing documentation ourselves would add text pandas does not have |
+
+The corpus grew from 1,223 to 1,265 documents (42 added, none removed). As the labelling
+rules planned, only the rows with a `corpus gap:` note changed: 3 became answerable
+(`show_versions`, `floor`, `year`) and one gained `year month` as other correct names.
+Gold now has 259 answerable questions, 191 in the honest subset.
+
+Every later step was rerun with unchanged settings: silver labels (1,806), split
+(train 1,234, validation 308), both retrievers with seed 3, and evaluation.
+
+Gold, honest subset (n=191), R@5:
+
+| Method | Any correct name | Primary name only |
+|---|---|---|
+| BM25 | 0.38 | 0.28 |
+| Base embeddings | 0.42 | 0.32 |
+| Fine-tuned | 0.49 | 0.34 |
+| Fine-tuned + hard negatives | 0.61 | 0.43 |
+
+| Comparison (R@5, 95% CI) | Any correct name | Primary name only |
+|---|---|---|
+| Hard negatives vs fine-tuned | +0.12 [+0.06, +0.17] | +0.09 [+0.04, +0.14] |
+| Hard negatives vs BM25 | +0.23 [+0.16, +0.30] | +0.15 [+0.08, +0.23] |
+
+The final model scored lower than in experiment 9 (0.63 and 0.47). To find out why, the
+previous model (kept locally) and the retrained one were scored on both corpora, as a
+diagnostic after the decision to keep the retrained model had been made:
+
+| Gold labels | Corpus | Previous model | Retrained model |
+|---|---|---|---|
+| before this fix (n=189) | before | 0.630 / 0.466 | 0.608 / 0.429 |
+| before this fix (n=189) | after | 0.630 / 0.466 | 0.608 / 0.429 |
+| after this fix (n=191) | after | 0.634 / 0.471 | 0.607 / 0.429 |
+
+(any correct name / primary name only)
+
+The new documents did not change the previous model's score, so the drop comes from
+retraining, not from the corpus. Retrained minus previous, paired bootstrap: -0.03
+[-0.06, +0.01] for any correct name and -0.04 [-0.07, -0.01] for the primary name.
+
+**Finding:** the same recipe and seed, on silver data that changed by two questions and a
+reshuffled split, moves gold R@5 by 3-4 points. Differences of that size between single
+training runs are not evidence that one setting is better; the comparisons above are
+larger than that.
+
+**Decision:** keep the retrained model, since it is what the documented commands produce.
+Choosing the previous model because it scored higher on gold would select a model on the
+test set.

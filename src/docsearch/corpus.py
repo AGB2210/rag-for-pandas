@@ -13,8 +13,8 @@ from pathlib import Path
 
 # Subpackages holding the public API. Excludes _libs (Cython internals),
 # tests, and compat shims: users never ask questions about those.
-# _config holds set_option, get_option and option_context.
-INCLUDE_SUBPACKAGES = ("core", "io", "plotting", "errors", "api", "_config")
+# _config holds set_option, get_option and option_context; util holds show_versions.
+INCLUDE_SUBPACKAGES = ("core", "io", "plotting", "errors", "api", "_config", "util")
 
 # Docstrings shorter than this are stubs like "Return the values."
 # They add noise to a retrieval index without answering any real question.
@@ -28,6 +28,9 @@ USER_REACHABLE_CLASSES = frozenset({
     "NDFrame", "IndexOpsMixin", "IndexingMixin",
     "GroupBy", "BaseGroupBy",
     "DatetimeIndexOpsMixin", "DatetimeTimedeltaMixin",
+    # Base classes of DatetimeArray and TimedeltaArray: Series.dt.floor,
+    # round, ceil and strftime are documented here.
+    "DatelikeOps", "TimelikeOps",
     "StringMethods", "CategoricalAccessor", "CombinedDatetimelikeProperties",
     "DatetimeProperties", "TimedeltaProperties", "PeriodProperties",
     "SparseAccessor", "SparseFrameAccessor", "StructAccessor", "ListAccessor",
@@ -87,19 +90,59 @@ def exported_names(package: Path) -> set[str]:
     return names
 
 
-def doc_keyword(node: ast.AST) -> str | None:
-    """Docstring passed as `doc="..."`, as in `columns = AxisProperty(axis=0, doc=...)`.
+# Functions that build a property from a docstring argument, such as
+# `year = _field_accessor("year", "Y", """The year of the datetime.""")`.
+# The docstring is always the last positional argument.
+DOCSTRING_FACTORIES = frozenset({"_field_accessor"})
 
-    These attributes are assignments, not `def` or `class`, so
-    ast.get_docstring cannot see them.
+
+def string_value(node: ast.AST, texts: dict[str, str]) -> str | None:
+    """A string literal, or a name bound to one earlier at the same level.
+
+    timedeltas.py writes `days_docstring = textwrap.dedent(\"\"\"...\"\"\")` and then
+    passes `days_docstring`, so names and dedent calls are resolved too.
+    """
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.Name):
+        return texts.get(node.id)
+    if isinstance(node, ast.Call) and len(node.args) == 1:
+        function = node.func
+        name = function.attr if isinstance(function, ast.Attribute) else getattr(function, "id", "")
+        if name == "dedent":
+            return string_value(node.args[0], texts)
+    return None
+
+
+def doc_argument(node: ast.AST, texts: dict[str, str]) -> str | None:
+    """Docstring passed into a call instead of written under a `def`.
+
+    Two forms: `columns = AxisProperty(axis=0, doc=...)` and the property
+    factories in DOCSTRING_FACTORIES. These attributes are assignments, not
+    `def` or `class`, so ast.get_docstring cannot see them.
     """
     if not (isinstance(node, ast.Assign) and isinstance(node.value, ast.Call)):
         return None
-    for keyword in node.value.keywords:
-        if keyword.arg == "doc" and isinstance(keyword.value, ast.Constant):
-            if isinstance(keyword.value.value, str):
-                return inspect.cleandoc(keyword.value.value)
+    call = node.value
+    for keyword in call.keywords:
+        if keyword.arg == "doc":
+            text = string_value(keyword.value, texts)
+            return inspect.cleandoc(text) if text else None
+    if getattr(call.func, "id", "") in DOCSTRING_FACTORIES and call.args:
+        text = string_value(call.args[-1], texts)
+        return inspect.cleandoc(text) if text else None
     return None
+
+
+def text_assignments(node: ast.AST) -> dict[str, str]:
+    """Names assigned a string at this level: `days_docstring = dedent(\"\"\"...\"\"\")`."""
+    texts: dict[str, str] = {}
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, ast.Assign) and len(child.targets) == 1 and isinstance(child.targets[0], ast.Name):
+            text = string_value(child.value, texts)
+            if text is not None:
+                texts[child.targets[0].id] = text
+    return texts
 
 
 def collect(node: ast.AST, prefix: str, source_file: Path, out: list[dict]) -> None:
@@ -116,6 +159,7 @@ def collect(node: ast.AST, prefix: str, source_file: Path, out: list[dict]) -> N
         for child in ast.iter_child_nodes(node)
         if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
+    texts = text_assignments(node)
     for child in ast.iter_child_nodes(node):
         if isinstance(child, ast.ClassDef):
             if not is_public(child.name):
@@ -136,7 +180,7 @@ def collect(node: ast.AST, prefix: str, source_file: Path, out: list[dict]) -> N
             if isinstance(child.value, ast.Name) and child.value.id in method_docs:
                 record(method_docs[child.value.id], prefix + target.id, "alias", source_file, out)
             else:
-                record(doc_keyword(child), prefix + target.id, "attribute", source_file, out)
+                record(doc_argument(child, texts), prefix + target.id, "attribute", source_file, out)
 
 
 def record(docstring: str | None, qualname: str, kind: str, source_file: Path, out: list[dict]) -> None:
