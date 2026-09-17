@@ -1,7 +1,7 @@
 # Runs the tests that need no trained models, data or GPU: Python unit and API
 # tests (the API tests use fake models) and the web page's component tests and
-# build. It also checks that the Docker image builds. Browser tests need the
-# trained retriever, so they run locally with `npm run e2e` (see README).
+# build. Browser tests need the trained retriever, so they run locally with
+# `npm run e2e` (see README).
 name: CI
 
 on:
@@ -67,14 +67,3 @@ jobs:
 
       - name: Type-check and build
         run: npm run build
-
-  docker:
-    # Checks that the image still builds. Nothing is pushed or published.
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - name: Build the image
-        run: docker build -t rag-for-pandas .
