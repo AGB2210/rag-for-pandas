@@ -1,0 +1,16 @@
+# Only source code goes into the build. Models and data are mounted when the
+# container runs, and local environments and build output are rebuilt inside.
+.git/
+.github/
+.venv/
+**/__pycache__/
+**/*.egg-info/
+.pytest_cache/
+data/
+models/
+mlruns/
+frontend/node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+.env

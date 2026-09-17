@@ -104,9 +104,10 @@ PyTorch; removing its `--extra-index-url` line installs the CPU build. It pins t
 the code imports directly; the packages those depend on are not pinned.
 
 Continuous integration (`.github/workflows/ci.yml`) runs on every push and pull request: the
-Python tests with a CPU build of PyTorch, and the web page's component tests and build. None of
-these need trained models, data or a GPU; the API tests use fake models. The browser tests do
-need the trained retriever, so they are run locally (see [Web page](#web-page)).
+Python tests with a CPU build of PyTorch, the web page's component tests and build, and a build
+of the Docker image. None of these need trained models, data or a GPU; the API tests use fake
+models. The browser tests do need the trained retriever, so they are run locally (see
+[Web page](#web-page)).
 
 ## Reproducing the pipeline
 
@@ -220,6 +221,45 @@ npm run e2e
 Answers are turned off by default so the tests do not load the generator; set `E2E_ANSWERS=1` to
 also check a real answer and its sources.
 
+## Running with Docker
+
+The `Dockerfile` builds the web page with Node, then runs the API and the page in a slim Python
+image with a CPU build of PyTorch (2.3 GB). The corpus and the trained retriever are not in the
+image: run the pipeline first, then mount them read-only when starting the container.
+
+```bash
+docker build -t rag-for-pandas .
+```
+
+In PowerShell on Windows:
+
+```powershell
+docker run -p 8000:8000 -v "${PWD}/models:/app/models:ro" -v "${PWD}/data/interim:/app/data/interim:ro" rag-for-pandas
+```
+
+On Linux or macOS the same command uses `$(pwd)` in place of `${PWD}`. The page is then at
+`http://127.0.0.1:8000/`, and Docker reports the container healthy once `/health` answers.
+
+Answers are off by default, because on CPU the generator is slow and memory-hungry. To turn them
+on, set the generator and mount a Hugging Face cache that already holds it:
+
+```powershell
+docker run -p 8000:8000 -e RAG_FOR_PANDAS_GENERATOR=Qwen/Qwen2.5-1.5B-Instruct -e HF_HUB_OFFLINE=1 -v "${PWD}/models:/app/models:ro" -v "${PWD}/data/interim:/app/data/interim:ro" -v "${HOME}/.cache/huggingface:/app/.cache/huggingface:ro" rag-for-pandas
+```
+
+Measured on the development machine (Windows 11, Docker Desktop 29.8 with 7.4 GB of memory):
+
+| | Search only | With answers |
+|---|---|---|
+| Ready after starting | 33 s | 49 s |
+| Memory | 0.6 GB | 6.1 GB |
+| Time per answer | | 24 s (2-5 s on the GPU without Docker) |
+
+Search results in the container matched the GPU setup to 4 decimal places. Answers can be worded
+differently: the GPU runs the generator in bfloat16 and the CPU in float32. The commands above were
+tested in PowerShell; the Linux and macOS form was not run. The container runs as a non-root user
+and cannot write to the mounted folders.
+
 ## Repository layout
 
 ```
@@ -230,6 +270,7 @@ frontend/            React web page, component tests and browser tests
 annotations/         hand-made gold labels (tracked; everything under data/ is generated)
 docs/                experiment log
 .github/workflows/   continuous integration
+Dockerfile           container image for the API and the page
 ```
 
 ## Limitations
