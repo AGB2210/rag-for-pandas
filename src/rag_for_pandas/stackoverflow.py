@@ -12,7 +12,7 @@ from pathlib import Path
 
 import httpx
 
-from docsearch.paths import STACKOVERFLOW_RAW
+from rag_for_pandas.paths import STACKOVERFLOW_RAW
 
 API_URL = "https://api.stackexchange.com/2.3"
 # Anonymous access stops at page 25 ("page above 25 requires access token").

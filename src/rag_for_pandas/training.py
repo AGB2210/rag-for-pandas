@@ -22,9 +22,9 @@ from sentence_transformers.sentence_transformer.losses.multiple_negatives_rankin
     MultipleNegativesRankingLoss,
 )
 
-from docsearch.corpus import document_text, final_name
-from docsearch.paths import CHECKPOINTS
-from docsearch.retrieval import Encoder
+from rag_for_pandas.corpus import document_text, final_name
+from rag_for_pandas.paths import CHECKPOINTS
+from rag_for_pandas.retrieval import Encoder
 
 # Questions whose answers call many functions have mostly incidental labels;
 # the label review found half of all labels loose.

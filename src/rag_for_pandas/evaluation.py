@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from docsearch.metrics import hits_at_k, paired_bootstrap_ci, recall_at_k
+from rag_for_pandas.metrics import hits_at_k, paired_bootstrap_ci, recall_at_k
 
 K_VALUES = (1, 5, 10)
 # The metric used for every interval, fixed before any comparison was run.

@@ -1,4 +1,4 @@
-# docsearch
+# rag-for-pandas
 
 [![CI](https://github.com/AGB2210/rag-for-pandas/actions/workflows/ci.yml/badge.svg)](https://github.com/AGB2210/rag-for-pandas/actions/workflows/ci.yml)
 
@@ -140,7 +140,7 @@ a fresh fetch gives a different silver set; the gold question ids stay fixed.
 After the pipeline has been run (the service needs the corpus and the trained retriever):
 
 ```bash
-.venv/Scripts/python -m uvicorn docsearch.api:app --port 8000
+.venv/Scripts/python -m uvicorn rag_for_pandas.api:app --port 8000
 ```
 
 Interactive documentation is at `http://127.0.0.1:8000/docs`. Models load once at startup.
@@ -179,8 +179,8 @@ generator (see the cited-answers results above).
 
 Environment variables:
 
-- `DOCSEARCH_RETRIEVER`: retriever model folder or name (default `models/retriever-minilm-ft-hn`)
-- `DOCSEARCH_GENERATOR`: generator model name (default `Qwen/Qwen2.5-1.5B-Instruct`), or `none`
+- `RAG_FOR_PANDAS_RETRIEVER`: retriever model folder or name (default `models/retriever-minilm-ft-hn`)
+- `RAG_FOR_PANDAS_GENERATOR`: generator model name (default `Qwen/Qwen2.5-1.5B-Instruct`), or `none`
   to serve search only; `/answer` then returns HTTP 503
 
 `scripts/smoke_test_api.py` starts the real server, checks every endpoint and stops it.
@@ -219,12 +219,13 @@ also check a real answer and its sources.
 ## Repository layout
 
 ```
-src/docsearch/     pipeline logic, one module per step, and the API
-scripts/           command-line entry points for each step
-tests/             Python unit and API tests
-frontend/          React web page and its component tests
-annotations/       hand-made gold labels (tracked; everything under data/ is generated)
-docs/              experiment log
+src/rag_for_pandas/  pipeline logic, one module per step, and the API
+scripts/             command-line entry points for each step
+tests/               Python unit and API tests
+frontend/            React web page, component tests and browser tests
+annotations/         hand-made gold labels (tracked; everything under data/ is generated)
+docs/                experiment log
+.github/workflows/   continuous integration
 ```
 
 ## Limitations

@@ -1,8 +1,8 @@
 import numpy as np
 
-from docsearch.corpus import document_text
-from docsearch.reranker_training import reranker_pairs
-from docsearch.training import MAX_LABELS, preferred_documents
+from rag_for_pandas.corpus import document_text
+from rag_for_pandas.reranker_training import reranker_pairs
+from rag_for_pandas.training import MAX_LABELS, preferred_documents
 
 DOCS = [
     {"qualname": q, "docstring": f"docs for {q}"}

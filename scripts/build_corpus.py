@@ -5,9 +5,9 @@ Usage: python scripts/build_corpus.py
 
 from __future__ import annotations
 
-from docsearch import paths
-from docsearch.corpus import extract
-from docsearch.jsonl import write_jsonl
+from rag_for_pandas import paths
+from rag_for_pandas.corpus import extract
+from rag_for_pandas.jsonl import write_jsonl
 
 
 def main() -> None:

@@ -18,7 +18,7 @@ import time
 
 import httpx
 
-from docsearch.pipeline import DISABLED, GENERATOR_ENV
+from rag_for_pandas.pipeline import DISABLED, GENERATOR_ENV
 
 STARTUP_TIMEOUT_SECONDS = 600
 
@@ -67,7 +67,7 @@ def main() -> None:
         print(f"{'PASS' if passed else 'FAIL'}  {name}  {detail}", flush=True)
 
     server = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "docsearch.api:app", "--host", "127.0.0.1", "--port", str(args.port)], env=env
+        [sys.executable, "-m", "uvicorn", "rag_for_pandas.api:app", "--host", "127.0.0.1", "--port", str(args.port)], env=env
     )
     try:
         check("server starts", True, f"{wait_until_up(server, url):.0f} s")

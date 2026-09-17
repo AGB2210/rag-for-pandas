@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from docsearch.metrics import hits_at_k, paired_bootstrap_ci, recall_at_k
+from rag_for_pandas.metrics import hits_at_k, paired_bootstrap_ci, recall_at_k
 
 DOCS = [{"qualname": "DataFrame.dropna"}, {"qualname": "Series.fillna"}, {"qualname": "read_csv"}]
 QUERIES = [{"labels": ["dropna"]}, {"labels": ["dropna"]}]

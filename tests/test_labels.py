@@ -1,6 +1,6 @@
 import pytest
 
-from docsearch.labels import build_silver_queries, chain_before, is_pandas_call, names_in_answer
+from rag_for_pandas.labels import build_silver_queries, chain_before, is_pandas_call, names_in_answer
 
 OWNERS = {
     "astype": {"NDFrame"},

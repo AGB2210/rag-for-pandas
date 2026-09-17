@@ -1,6 +1,6 @@
 """A local instruction-tuned language model behind the Generator interface.
 
-Kept separate from docsearch.generation so that prompt building and citation
+Kept separate from rag_for_pandas.generation so that prompt building and citation
 checks can be imported and tested without loading PyTorch models.
 """
 

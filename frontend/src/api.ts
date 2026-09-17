@@ -1,4 +1,4 @@
-// Types mirror the response models in src/docsearch/api.py.
+// Types mirror the response models in src/rag_for_pandas/api.py.
 
 export const MAX_QUERY_CHARS = 500
 

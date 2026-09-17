@@ -1,8 +1,8 @@
 import numpy as np
 
-from docsearch.corpus import document_text
-from docsearch.retrieval import EmbeddingRetriever, bm25_rankings, top_k
-from docsearch.text import normalise_title, tokenize
+from rag_for_pandas.corpus import document_text
+from rag_for_pandas.retrieval import EmbeddingRetriever, bm25_rankings, top_k
+from rag_for_pandas.text import normalise_title, tokenize
 
 
 def test_top_k_orders_documents_by_cosine_score():

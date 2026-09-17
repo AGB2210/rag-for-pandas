@@ -7,13 +7,13 @@ import threading
 from dataclasses import dataclass
 from typing import Protocol
 
-from docsearch import paths
-from docsearch.generation import CONTEXT_DOCS, Generator, build_messages, cited_indices, excerpt, invalid_citations, is_abstention
-from docsearch.jsonl import load_jsonl
+from rag_for_pandas import paths
+from rag_for_pandas.generation import CONTEXT_DOCS, Generator, build_messages, cited_indices, excerpt, invalid_citations, is_abstention
+from rag_for_pandas.jsonl import load_jsonl
 
-# Set to a model folder or Hugging Face name; "none" for DOCSEARCH_GENERATOR disables answers.
-RETRIEVER_ENV = "DOCSEARCH_RETRIEVER"
-GENERATOR_ENV = "DOCSEARCH_GENERATOR"
+# Set to a model folder or Hugging Face name; "none" for RAG_FOR_PANDAS_GENERATOR disables answers.
+RETRIEVER_ENV = "RAG_FOR_PANDAS_RETRIEVER"
+GENERATOR_ENV = "RAG_FOR_PANDAS_GENERATOR"
 DISABLED = "none"
 
 
@@ -84,8 +84,8 @@ def load_pipeline() -> Pipeline:
     # Imported here so that importing this module, as the tests do, loads no models.
     from sentence_transformers import SentenceTransformer
 
-    from docsearch.local_generator import LOCAL_MODEL, LocalGenerator
-    from docsearch.retrieval import EmbeddingRetriever
+    from rag_for_pandas.local_generator import LOCAL_MODEL, LocalGenerator
+    from rag_for_pandas.retrieval import EmbeddingRetriever
 
     docs = load_jsonl(paths.CORPUS)
     retriever = EmbeddingRetriever(docs, SentenceTransformer(os.environ.get(RETRIEVER_ENV, str(paths.HARD_NEGATIVE_MODEL))))

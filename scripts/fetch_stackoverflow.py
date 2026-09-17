@@ -7,7 +7,7 @@ Usage: python scripts/fetch_stackoverflow.py
 
 from __future__ import annotations
 
-from docsearch.stackoverflow import fetch_pages
+from rag_for_pandas.stackoverflow import fetch_pages
 
 
 def main() -> None:

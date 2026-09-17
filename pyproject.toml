@@ -3,9 +3,9 @@ requires = ["setuptools>=78"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "docsearch"
+name = "rag-for-pandas"
 version = "0.1.0"
-description = "Search over pandas API documentation, evaluated on real Stack Overflow questions."
+description = "Retrieval-augmented answers over the pandas API documentation, with a retriever fine-tuned and evaluated on Stack Overflow questions."
 requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]

@@ -1,6 +1,6 @@
 import pytest
 
-from docsearch.gold import gold_queries, next_round, sample_round
+from rag_for_pandas.gold import gold_queries, next_round, sample_round
 
 
 def test_gold_queries_builds_lenient_and_strict_labels_and_skips_unanswerable():

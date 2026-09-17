@@ -11,10 +11,10 @@ from __future__ import annotations
 import csv
 import random
 
-from docsearch import paths
-from docsearch.jsonl import load_jsonl
-from docsearch.labels import evidence_lines
-from docsearch.stackoverflow import load_items
+from rag_for_pandas import paths
+from rag_for_pandas.jsonl import load_jsonl
+from rag_for_pandas.labels import evidence_lines
+from rag_for_pandas.stackoverflow import load_items
 
 SAMPLE_SIZE = 50
 SEED = 42

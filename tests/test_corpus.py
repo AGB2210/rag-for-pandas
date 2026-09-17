@@ -1,7 +1,7 @@
 import ast
 from pathlib import Path
 
-from docsearch.corpus import INCLUDE_SUBPACKAGES, collect, corpus_owners, exported_names, extract
+from rag_for_pandas.corpus import INCLUDE_SUBPACKAGES, collect, corpus_owners, exported_names, extract
 
 LONG = " ".join(f"word{i}" for i in range(25))
 

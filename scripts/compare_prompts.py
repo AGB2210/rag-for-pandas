@@ -10,7 +10,7 @@ for the final score of the chosen prompt.
 Prompts compared (every prompt sees the same retrieved excerpts):
   A  rules in the system message, before the excerpts (the first prompt tried)
   B  shorter, stricter rules placed after the question
-  C  B with two worked examples first; adopted as docsearch.generation.build_messages
+  C  B with two worked examples first; adopted as rag_for_pandas.generation.build_messages
   D  C, but the citation goes right after each function named: "DataFrame.dropna [1]"
   E  C, but citations go on a fixed last line: "Sources: [1]"
   F  E, but refuse only when no excerpt is about the question
@@ -28,9 +28,9 @@ import json
 import time
 from collections.abc import Callable
 
-from docsearch import paths
-from docsearch.corpus import final_name
-from docsearch.generation import (
+from rag_for_pandas import paths
+from rag_for_pandas.corpus import final_name
+from rag_for_pandas.generation import (
     CONTEXT_DOCS,
     NOT_FOUND,
     RULES,
@@ -44,9 +44,9 @@ from docsearch.generation import (
     numbered_context,
     user_message,
 )
-from docsearch.jsonl import load_jsonl
-from docsearch.local_generator import LocalGenerator
-from docsearch.retrieval import embedding_rankings
+from rag_for_pandas.jsonl import load_jsonl
+from rag_for_pandas.local_generator import LocalGenerator
+from rag_for_pandas.retrieval import embedding_rankings
 
 FIRST_SYSTEM_PROMPT = (
     "You answer questions about pandas using only the numbered documentation excerpts provided. "

@@ -1,7 +1,7 @@
 import numpy as np
 
-from docsearch.corpus import document_text
-from docsearch.training import MAX_LABELS, NEGATIVE_SKIP_TOP, add_hard_negatives, preferred_documents, training_pairs
+from rag_for_pandas.corpus import document_text
+from rag_for_pandas.training import MAX_LABELS, NEGATIVE_SKIP_TOP, add_hard_negatives, preferred_documents, training_pairs
 
 
 def doc(qualname: str) -> dict:

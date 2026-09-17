@@ -1,7 +1,7 @@
 """HTTP API: search the pandas documentation and ask for cited answers.
 
 Run with:
-  uvicorn docsearch.api:app
+  uvicorn rag_for_pandas.api:app
 
 Interactive documentation is served at /docs.
 """
@@ -19,8 +19,8 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, StringConstraints
 
-from docsearch.paths import FRONTEND_BUILD
-from docsearch.pipeline import Pipeline, load_pipeline
+from rag_for_pandas.paths import FRONTEND_BUILD
+from rag_for_pandas.pipeline import Pipeline, load_pipeline
 
 MAX_QUERY_CHARS = 500
 MAX_RESULTS = 20
@@ -85,7 +85,7 @@ def create_app(load: Callable[[], Pipeline] = load_pipeline, frontend: Path | No
         yield
 
     app = FastAPI(
-        title="docsearch",
+        title="rag-for-pandas",
         description="Search pandas API documentation and get answers that cite it.",
         version="0.1.0",
         lifespan=lifespan,

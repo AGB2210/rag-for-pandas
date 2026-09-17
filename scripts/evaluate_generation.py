@@ -1,7 +1,7 @@
 """Score cited answer generation on the gold set, with automatic checks only.
 
 Retrieval uses the hard-negative retriever; generation uses the prompt in
-docsearch.generation and the local model. For answerable questions, checks
+rag_for_pandas.generation and the local model. For answerable questions, checks
 whether answers cite anything, cite numbers that point at no excerpt, cite a
 document carrying a correct name, or wrongly abstain. The same checks are
 repeated for questions whose excerpts do contain a correct document, which
@@ -25,9 +25,9 @@ from __future__ import annotations
 import argparse
 import time
 
-from docsearch import paths
-from docsearch.corpus import final_name
-from docsearch.generation import (
+from rag_for_pandas import paths
+from rag_for_pandas.corpus import final_name
+from rag_for_pandas.generation import (
     CONTEXT_DOCS,
     build_messages,
     cited_indices,
@@ -36,15 +36,15 @@ from docsearch.generation import (
     is_abstention,
     names_correct_function,
 )
-from docsearch.gold import read_gold_rows
-from docsearch.jsonl import load_jsonl, write_jsonl
+from rag_for_pandas.gold import read_gold_rows
+from rag_for_pandas.jsonl import load_jsonl, write_jsonl
 
 
 def generate_records() -> list[dict]:
     """Retrieve, generate and grade one answer per gold question."""
     # Imported here so --from-saved does not load PyTorch models.
-    from docsearch.local_generator import LocalGenerator
-    from docsearch.retrieval import embedding_rankings
+    from rag_for_pandas.local_generator import LocalGenerator
+    from rag_for_pandas.retrieval import embedding_rankings
 
     docs = load_jsonl(paths.CORPUS)
     rows = read_gold_rows()

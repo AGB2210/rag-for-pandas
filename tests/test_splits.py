@@ -1,4 +1,4 @@
-from docsearch.splits import split_silver
+from rag_for_pandas.splits import split_silver
 
 SILVER = [{"question_id": i, "query": f"question {i}"} for i in range(1, 21)] + [
     {"question_id": 99, "query": "How to Drop NA?"}

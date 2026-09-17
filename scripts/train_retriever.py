@@ -15,10 +15,10 @@ from pathlib import Path
 
 from sentence_transformers import SentenceTransformer
 
-from docsearch import paths
-from docsearch.jsonl import load_jsonl
-from docsearch.retrieval import BASE_MODEL
-from docsearch.training import (
+from rag_for_pandas import paths
+from rag_for_pandas.jsonl import load_jsonl
+from rag_for_pandas.retrieval import BASE_MODEL
+from rag_for_pandas.training import (
     MAX_LABELS,
     SEED,
     add_hard_negatives,

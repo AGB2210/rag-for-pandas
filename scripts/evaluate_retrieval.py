@@ -5,11 +5,11 @@ Usage: python scripts/evaluate_retrieval.py
 
 from __future__ import annotations
 
-from docsearch import paths
-from docsearch.evaluation import K_VALUES, report_lines
-from docsearch.gold import gold_queries, read_gold_rows
-from docsearch.jsonl import load_jsonl
-from docsearch.retrieval import bm25_rankings, embedding_rankings
+from rag_for_pandas import paths
+from rag_for_pandas.evaluation import K_VALUES, report_lines
+from rag_for_pandas.gold import gold_queries, read_gold_rows
+from rag_for_pandas.jsonl import load_jsonl
+from rag_for_pandas.retrieval import bm25_rankings, embedding_rankings
 
 
 def main() -> None:

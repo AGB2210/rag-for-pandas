@@ -1,4 +1,4 @@
-from docsearch.generation import (
+from rag_for_pandas.generation import (
     NOT_FOUND,
     RULES,
     SYSTEM_PROMPT,

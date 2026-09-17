@@ -11,7 +11,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 
-from docsearch.text import word_set
+from rag_for_pandas.text import word_set
 
 CODE_SPAN = re.compile(r"<code>(.*?)</code>", re.DOTALL)
 # Attribute followed by a call or an indexer. The `[` case is essential:

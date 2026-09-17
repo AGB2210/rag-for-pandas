@@ -8,11 +8,11 @@ Usage: python scripts/build_eval_set.py
 
 from __future__ import annotations
 
-from docsearch import paths
-from docsearch.corpus import corpus_owners
-from docsearch.jsonl import load_jsonl, write_jsonl
-from docsearch.labels import build_silver_queries
-from docsearch.stackoverflow import load_items
+from rag_for_pandas import paths
+from rag_for_pandas.corpus import corpus_owners
+from rag_for_pandas.jsonl import load_jsonl, write_jsonl
+from rag_for_pandas.labels import build_silver_queries
+from rag_for_pandas.stackoverflow import load_items
 
 
 def main() -> None:

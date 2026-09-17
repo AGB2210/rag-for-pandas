@@ -18,7 +18,7 @@ from __future__ import annotations
 import re
 from typing import Protocol
 
-from docsearch.corpus import final_name
+from rag_for_pandas.corpus import final_name
 
 CONTEXT_DOCS = 3
 # The median docstring is 194 words, so most excerpts are complete; long ones are cut.

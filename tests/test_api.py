@@ -1,9 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from docsearch.api import MAX_QUERY_CHARS, MAX_RESULTS, create_app
-from docsearch.generation import NOT_FOUND
-from docsearch.pipeline import Pipeline
+from rag_for_pandas.api import MAX_QUERY_CHARS, MAX_RESULTS, create_app
+from rag_for_pandas.generation import NOT_FOUND
+from rag_for_pandas.pipeline import Pipeline
 
 DOCS = [
     {"qualname": "DataFrame.fillna", "docstring": "Fill NA/NaN values.", "source_file": "core/generic.py"},
@@ -103,11 +103,11 @@ def test_answer_is_unavailable_without_a_generator():
 
 
 def test_serves_the_built_page_without_hiding_the_api(tmp_path):
-    (tmp_path / "index.html").write_text("<!doctype html><title>docsearch page</title>", encoding="utf-8")
+    (tmp_path / "index.html").write_text("<!doctype html><title>rag-for-pandas page</title>", encoding="utf-8")
     with make_client(FakeGenerator("unused"), frontend=tmp_path) as test_client:
         page = test_client.get("/")
         assert page.status_code == 200
-        assert "docsearch page" in page.text
+        assert "rag-for-pandas page" in page.text
         assert test_client.get("/health").json()["documents"] == 3
         assert test_client.post("/search", json={"query": "delete empty rows"}).status_code == 200
         assert test_client.get("/docs").status_code == 200

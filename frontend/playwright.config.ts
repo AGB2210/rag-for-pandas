@@ -22,11 +22,11 @@ export default defineConfig({
     channel: 'chrome',
   },
   webServer: {
-    command: `${PYTHON} -m uvicorn docsearch.api:app --host 127.0.0.1 --port ${PORT}`,
+    command: `${PYTHON} -m uvicorn rag_for_pandas.api:app --host 127.0.0.1 --port ${PORT}`,
     // Data and model paths are relative to the project root.
     cwd: '..',
     url: `http://127.0.0.1:${PORT}/health`,
-    env: answersOn ? {} : { DOCSEARCH_GENERATOR: 'none' },
+    env: answersOn ? {} : { RAG_FOR_PANDAS_GENERATOR: 'none' },
     timeout: 300_000,
     reuseExistingServer: false,
   },

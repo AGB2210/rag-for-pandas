@@ -9,9 +9,9 @@ import numpy as np
 from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
 
-from docsearch.corpus import document_text
-from docsearch.paths import EMBEDDINGS_CACHE
-from docsearch.text import tokenize
+from rag_for_pandas.corpus import document_text
+from rag_for_pandas.paths import EMBEDDINGS_CACHE
+from rag_for_pandas.text import tokenize
 
 BASE_MODEL = "all-MiniLM-L6-v2"
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from docsearch.corpus import final_name
+from rag_for_pandas.corpus import final_name
 
 BOOTSTRAP_SAMPLES = 10_000
 BOOTSTRAP_SEED = 0

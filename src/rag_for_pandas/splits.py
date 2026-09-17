@@ -15,7 +15,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 
-from docsearch.text import normalise_title
+from rag_for_pandas.text import normalise_title
 
 VALIDATION_FRACTION = 0.2
 SEED = 13

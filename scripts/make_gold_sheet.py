@@ -13,9 +13,9 @@ from __future__ import annotations
 import csv
 import html
 
-from docsearch.gold import COLUMNS, next_round, sample_round
-from docsearch.paths import GOLD_QUERIES
-from docsearch.stackoverflow import load_items
+from rag_for_pandas.gold import COLUMNS, next_round, sample_round
+from rag_for_pandas.paths import GOLD_QUERIES
+from rag_for_pandas.stackoverflow import load_items
 
 
 def main() -> None:

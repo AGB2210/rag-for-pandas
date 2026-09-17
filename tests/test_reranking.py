@@ -1,6 +1,6 @@
 import numpy as np
 
-from docsearch.reranking import rerank
+from rag_for_pandas.reranking import rerank
 
 DOCS = [{"qualname": f"d{i}", "docstring": f"text {i}"} for i in range(5)]
 

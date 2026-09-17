@@ -12,7 +12,7 @@ from typing import Protocol
 
 import numpy as np
 
-from docsearch.corpus import document_text
+from rag_for_pandas.corpus import document_text
 
 RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2"
 

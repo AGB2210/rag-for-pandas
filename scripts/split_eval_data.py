@@ -5,10 +5,10 @@ Usage: python scripts/split_eval_data.py
 
 from __future__ import annotations
 
-from docsearch import paths
-from docsearch.gold import read_gold_rows
-from docsearch.jsonl import load_jsonl, write_jsonl
-from docsearch.splits import split_silver
+from rag_for_pandas import paths
+from rag_for_pandas.gold import read_gold_rows
+from rag_for_pandas.jsonl import load_jsonl, write_jsonl
+from rag_for_pandas.splits import split_silver
 
 
 def main() -> None:

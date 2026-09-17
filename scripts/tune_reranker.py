@@ -16,13 +16,13 @@ import time
 
 from sentence_transformers.cross_encoder import CrossEncoder
 
-from docsearch import paths
-from docsearch.evaluation import CI_K, K_VALUES
-from docsearch.jsonl import load_jsonl
-from docsearch.metrics import hits_at_k, paired_bootstrap_ci, recall_at_k
-from docsearch.reranker_training import MAX_SEQ_LENGTH
-from docsearch.reranking import RERANK_MODEL, rerank
-from docsearch.retrieval import embedding_rankings
+from rag_for_pandas import paths
+from rag_for_pandas.evaluation import CI_K, K_VALUES
+from rag_for_pandas.jsonl import load_jsonl
+from rag_for_pandas.metrics import hits_at_k, paired_bootstrap_ci, recall_at_k
+from rag_for_pandas.reranker_training import MAX_SEQ_LENGTH
+from rag_for_pandas.reranking import RERANK_MODEL, rerank
+from rag_for_pandas.retrieval import embedding_rankings
 
 DEPTHS = (10, 20, 50)
 

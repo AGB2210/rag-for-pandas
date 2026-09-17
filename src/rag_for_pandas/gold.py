@@ -10,8 +10,8 @@ import random
 from itertools import accumulate
 from pathlib import Path
 
-from docsearch.paths import GOLD_QUERIES
-from docsearch.text import word_set
+from rag_for_pandas.paths import GOLD_QUERIES
+from rag_for_pandas.text import word_set
 
 COLUMNS = ["question_id", "query", "primary", "also_correct", "answerable", "notes", "url"]
 

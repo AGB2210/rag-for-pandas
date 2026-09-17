@@ -117,7 +117,7 @@ export default function App() {
   return (
     <main>
       <header>
-        <h1>docsearch</h1>
+        <h1>rag-for-pandas</h1>
         <p>Ask a pandas question in your own words. Answers cite the documentation they come from.</p>
       </header>
 

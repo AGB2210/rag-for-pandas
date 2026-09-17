@@ -16,12 +16,12 @@ from pathlib import Path
 
 from sentence_transformers.cross_encoder import CrossEncoder
 
-from docsearch import paths
-from docsearch.jsonl import load_jsonl
-from docsearch.reranker_training import MINING_DEPTH, fit_reranker, reranker_pairs
-from docsearch.reranking import RERANK_MODEL
-from docsearch.retrieval import embedding_rankings
-from docsearch.training import SEED, preferred_documents
+from rag_for_pandas import paths
+from rag_for_pandas.jsonl import load_jsonl
+from rag_for_pandas.reranker_training import MINING_DEPTH, fit_reranker, reranker_pairs
+from rag_for_pandas.reranking import RERANK_MODEL
+from rag_for_pandas.retrieval import embedding_rankings
+from rag_for_pandas.training import SEED, preferred_documents
 
 
 def main() -> None:

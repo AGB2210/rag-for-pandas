@@ -15,9 +15,9 @@ from datasets import Dataset
 from sentence_transformers.cross_encoder import CrossEncoder, CrossEncoderTrainer, CrossEncoderTrainingArguments
 from sentence_transformers.cross_encoder.losses.binary_cross_entropy import BinaryCrossEntropyLoss
 
-from docsearch.corpus import document_text, final_name
-from docsearch.paths import CHECKPOINTS
-from docsearch.training import MAX_LABELS
+from rag_for_pandas.corpus import document_text, final_name
+from rag_for_pandas.paths import CHECKPOINTS
+from rag_for_pandas.training import MAX_LABELS
 
 NEGATIVES_PER_QUESTION = 4
 # Candidates are mined from this many retrieved results.
