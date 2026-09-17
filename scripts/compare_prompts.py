@@ -18,6 +18,9 @@ Prompts compared (every prompt sees the same retrieved excerpts):
 D and E target the main failure of C: answers that name the right function
 without citing its excerpt.
 
+Every answer is saved to data/eval/prompt_comparison.jsonl, so results can be
+checked and answers read after the run.
+
 Usage: python scripts/compare_prompts.py [--questions N] [--start N] [--prompts CDEF]
 """
 
@@ -44,7 +47,7 @@ from rag_for_pandas.generation import (
     numbered_context,
     user_message,
 )
-from rag_for_pandas.jsonl import load_jsonl
+from rag_for_pandas.jsonl import load_jsonl, write_jsonl
 from rag_for_pandas.local_generator import LocalGenerator
 from rag_for_pandas.retrieval import embedding_rankings
 
@@ -142,6 +145,7 @@ def main() -> None:
     print(f"validation questions: {len(queries)}  (label in retrieved context: {answerable}, not: {unanswerable})")
     print(f"  {'prompt':<26}{'cites':>8}{'invalid':>9}{'correct':>9}{'names':>8}{'abstain|answer in ctx':>23}{'abstain|not in ctx':>20}{'s/answer':>10}")
 
+    results = []
     for name, build in PROMPTS.items():
         if name[0] not in args.prompts:
             continue
@@ -159,11 +163,17 @@ def main() -> None:
             f"  {name:<26}{cites:>5}/{len(queries):<2}{invalid:>6}/{len(queries):<2}{correct:>6}/{len(queries):<2}{names:>5}/{len(queries):<2}"
             f"{wrong_abstain:>19}/{answerable:<3}{right_abstain:>16}/{unanswerable:<3}{seconds:>10.1f}"
         )
-        print("RESULT " + json.dumps({
-            "prompt": name, "questions": len(queries), "cites": cites, "invalid": invalid, "correct": correct, "names_correct": names,
+        result = {
+            "prompt": name, "start": args.start, "questions": len(queries), "cites": cites, "invalid": invalid,
+            "correct": correct, "names_correct": names,
             "abstain_when_answer_in_context": wrong_abstain, "abstain_when_not": right_abstain,
-            "answers": [{"question": q["query"], "answer": a} for q, a in zip(queries, answers)],
-        }), flush=True)
+        }
+        print("RESULT " + json.dumps(result), flush=True)
+        results.append({**result, "answers": [{"question": q["query"], "answer": a} for q, a in zip(queries, answers)]})
+
+    paths.PROMPT_COMPARISON.parent.mkdir(parents=True, exist_ok=True)
+    write_jsonl(paths.PROMPT_COMPARISON, results)
+    print(f"answers saved to {paths.PROMPT_COMPARISON}")
 
 
 if __name__ == "__main__":
