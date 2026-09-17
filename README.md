@@ -98,13 +98,14 @@ Ubuntu with a CPU build of PyTorch and runs the tests; training, GPU use and the
 were run only on the development machine. Training also runs on CPU, more slowly.
 
 ```bash
-python -m venv .venv
+py -3.12 -m venv .venv
 .venv/Scripts/python -m pip install -r requirements-dev.txt
 .venv/Scripts/python -m pip install -e . --no-deps
 .venv/Scripts/python -m pytest -q
 ```
 
-On Linux or macOS use `.venv/bin/python`. `requirements.txt` installs CUDA 12.8 builds of
+On Linux or macOS create the environment with `python3.12 -m venv .venv` and use
+`.venv/bin/python`. `requirements.txt` installs CUDA 12.8 builds of
 PyTorch; removing its `--extra-index-url` line installs the CPU build. It pins the packages
 the code imports directly; the packages those depend on are not pinned.
 
