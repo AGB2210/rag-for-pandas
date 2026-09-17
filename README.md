@@ -97,6 +97,11 @@ python -m venv .venv
 On Linux or macOS use `.venv/bin/python`. `requirements.txt` installs CUDA 12.8 builds of
 PyTorch; removing its `--extra-index-url` line installs the CPU build.
 
+Continuous integration (`.github/workflows/ci.yml`) runs on every push and pull request: the
+Python tests with a CPU build of PyTorch, and the web page's component tests and build. None of
+these need trained models, data or a GPU; the API tests use fake models. The browser tests do
+need the trained retriever, so they are run locally (see [Web page](#web-page)).
+
 ## Reproducing the pipeline
 
 Get the exact pandas source the corpus was built from:
