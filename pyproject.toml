@@ -31,4 +31,5 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+# scripts/ is on the path so tests can check the summaries that scripts print.
+pythonpath = ["src", "scripts"]
