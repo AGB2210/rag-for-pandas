@@ -139,6 +139,28 @@ the 300-per-day limit) and caches every response. The results above use question
 on 2026-09-13. Those responses are not redistributed, and vote order changes over time, so
 a fresh fetch gives a different silver set; the gold question ids stay fixed.
 
+## One-click start on Windows
+
+After the pipeline has been run, double-click `start.bat`. On the first run it asks before
+installing, then:
+
+1. creates `.venv` with Python 3.12 (through the `py` launcher) and installs `requirements.txt`,
+   including PyTorch with CUDA 12.8 (up to about 4 GB of downloads);
+2. builds the web page with `npm ci` and `npm run build` (needs Node.js);
+3. checks that the trained retriever and the corpus exist, and explains what to run if not;
+4. turns answers on only when PyTorch finds an NVIDIA GPU, otherwise serves search only;
+5. starts the server on 127.0.0.1, so only this computer can open it, and opens the page in the
+   browser once `/health` answers.
+
+Later runs skip the installation and start directly. If `requirements.txt` changes, for example
+after a `git pull`, the next run offers to install again. Close the window to stop the server.
+
+Tested on the development machine: a first run in a fresh clone, in a folder whose name
+contains a space, took 5 minutes, with most packages already in the local pip cache, so a first
+run elsewhere downloads more and takes longer; later starts took 24-36 s. Declining setup, a
+changed `requirements.txt`, a missing retriever, a port already in use and a machine without a
+GPU (simulated by hiding the GPU) each gave the expected result.
+
 ## Running the API
 
 After the pipeline has been run (the service needs the corpus and the trained retriever):
@@ -229,6 +251,7 @@ tests/               Python unit and API tests
 frontend/            React web page, component tests and browser tests
 annotations/         hand-made gold labels (tracked; everything under data/ is generated)
 docs/                experiment log
+start.bat            one-click setup and start on Windows
 .github/workflows/   continuous integration
 ```
 
