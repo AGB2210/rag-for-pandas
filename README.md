@@ -151,20 +151,25 @@ installing, then:
 
 1. creates `.venv` with Python 3.12 (through the `py` launcher) and installs `requirements.txt`,
    including PyTorch with CUDA 12.8 (up to about 4 GB of downloads);
-2. builds the web page with `npm ci` and `npm run build` (needs Node.js);
+2. installs the web page's packages with `npm ci` (needs Node.js);
 3. checks that the trained retriever and the corpus exist, and explains what to run if not;
-4. turns answers on only when PyTorch finds an NVIDIA GPU, otherwise serves search only;
+4. turns answers on when PyTorch finds an NVIDIA GPU. If the answer model is not downloaded yet,
+   it asks before downloading it (about 2.9 GB); without a GPU, or when declined, it serves
+   search only;
 5. starts the server on 127.0.0.1, so only this computer can open it, and opens the page in the
    browser once `/health` answers.
 
-Later runs skip the installation and start directly. If `requirements.txt` changes, for example
-after a `git pull`, the next run offers to install again. Close the window to stop the server.
+Later runs skip the installations. The page is rebuilt on every start (a few seconds), so changes
+from a `git pull` always reach it. If `requirements.txt` or `frontend/package-lock.json` changes,
+the next run installs again. Close the window to stop the server.
 
-Tested on the development machine: a first run in a fresh clone, in a folder whose name
-contains a space, took 5 minutes, with most packages already in the local pip cache, so a first
-run elsewhere downloads more and takes longer; later starts took 24-36 s. Declining setup, a
-changed `requirements.txt`, a missing retriever, a port already in use and a machine without a
-GPU (simulated by hiding the GPU) each gave the expected result.
+Tested on the development machine with a fresh clone from GitHub, in a folder whose name
+contains a space: the first run took about 5 minutes, with most packages already in the local
+pip cache, so a first run elsewhere downloads more and takes longer; later starts took 18-34 s.
+Declining setup, a changed `requirements.txt` or `package-lock.json`, a missing retriever, a
+port already in use, no GPU (simulated by hiding it), a missing answer model (simulated with an
+empty model cache, answering no, which downloaded nothing), Node.js missing with and without an
+earlier page build, and an answer containing quotes each gave the expected result.
 
 ## Running the API
 
