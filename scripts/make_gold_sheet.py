@@ -21,7 +21,7 @@ from rag_for_pandas.stackoverflow import load_items
 def main() -> None:
     existing: list[list[str]] = []
     if GOLD_QUERIES.exists():
-        with GOLD_QUERIES.open(encoding="utf-8") as handle:
+        with GOLD_QUERIES.open(newline="", encoding="utf-8") as handle:
             existing = list(csv.reader(handle))[1:]
 
     done = len(existing)

@@ -23,7 +23,8 @@ ROUNDS = [(100, 7), (200, 8)]
 
 
 def read_gold_rows(path: Path = GOLD_QUERIES) -> list[dict]:
-    with path.open(encoding="utf-8") as handle:
+    # newline="" lets the csv module handle line endings, as its documentation requires.
+    with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
 
 
