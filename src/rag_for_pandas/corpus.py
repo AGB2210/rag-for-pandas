@@ -16,6 +16,11 @@ from pathlib import Path
 # _config holds set_option, get_option and option_context; util holds show_versions.
 INCLUDE_SUBPACKAGES = ("core", "io", "plotting", "errors", "api", "_config", "util")
 
+# Files inside those subpackages whose public-looking names are not the pandas
+# API. dataframe_protocol.py defines the abstract interchange-protocol class,
+# also named DataFrame, so its methods would pass for pandas DataFrame methods.
+EXCLUDED_FILES = frozenset({"core/interchange/dataframe_protocol.py"})
+
 # Docstrings shorter than this are stubs like "Return the values."
 # They add noise to a retrieval index without answering any real question.
 MIN_DOCSTRING_WORDS = 20
@@ -208,8 +213,10 @@ def extract(package: Path) -> Extraction:
     records: list[dict] = []
     files_parsed = files_failed = 0
     for subpackage in INCLUDE_SUBPACKAGES:
-        for path in (package / subpackage).rglob("*.py"):
-            if "tests" in path.parts:
+        # Sorted: rglob order depends on the file system, and the corpus order
+        # decides which of two same-named documents is kept as preferred.
+        for path in sorted((package / subpackage).rglob("*.py")):
+            if "tests" in path.parts or path.relative_to(package).as_posix() in EXCLUDED_FILES:
                 continue
             try:
                 tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))

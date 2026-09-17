@@ -22,9 +22,9 @@ function in the top 5 results.
 | BM25 keyword search | 0.38 | 0.28 |
 | `all-MiniLM-L6-v2` embeddings | 0.42 | 0.32 |
 | Fine-tuned on Stack Overflow pairs | 0.49 | 0.34 |
-| **Fine-tuned with mined hard negatives** | **0.61** | **0.43** |
+| **Fine-tuned with mined hard negatives** | **0.62** | **0.43** |
 
-Final model vs BM25: +0.23 (95% CI [+0.16, +0.30]) and +0.15 (95% CI [+0.08, +0.23]).
+Final model vs BM25: +0.25 (95% CI [+0.17, +0.32]) and +0.16 (95% CI [+0.08, +0.23]).
 Paired bootstrap over questions; R@5 was fixed as the comparison metric in advance.
 Retraining with the same settings after a small data change moved these scores by 3-4
 points, so smaller differences between single training runs are not meaningful.
@@ -40,10 +40,10 @@ them as `[1]`-`[3]` or say it could not find the answer. On the 259 answerable g
 
 | | Result |
 |---|---|
-| Retriever supplied a correct document in the top 3 | 60% |
-| Answer cites a correct document | 14% (22% when one was retrieved) |
-| Answer names a correct function, cited or not | 51% (65% when one was retrieved) |
-| Answer cites an excerpt that does not exist | 1 answer (under 1%) |
+| Retriever supplied a correct document in the top 3 | 61% |
+| Answer cites a correct document | 13% (21% when one was retrieved) |
+| Answer names a correct function, cited or not | 51% (64% when one was retrieved) |
+| Answer cites an excerpt that does not exist | 0% |
 | Answer says it could not find the answer, on the 41 unanswerable questions | 46% |
 
 Answer generation is the weakest stage: the small local model often names the right function
@@ -57,7 +57,7 @@ Numbers are produced by `scripts/evaluate_generation.py`.
 
 ```mermaid
 flowchart LR
-    A["pandas source<br/>(commit a183ef5)"] -->|parse with ast| B["Corpus<br/>1,265 API docstrings"]
+    A["pandas source<br/>(commit a183ef5)"] -->|parse with ast| B["Corpus<br/>1,262 API docstrings"]
     C["Stack Overflow API<br/>2,500 questions"] --> D["Silver labels<br/>1,806 questions"]
     C --> E["Gold labels<br/>300 questions, by hand"]
     D -->|remove gold, split| F["Train 1,234<br/>Validation 308"]

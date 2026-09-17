@@ -77,6 +77,9 @@ def make_package(root: Path) -> Path:
         "api/types/__init__.py": '__all__ = ["infer_dtype"]',
         "core/frame.py": f'class DataFrame:\n    """{LONG}"""\n\nclass Block:\n    """{LONG}"""\n',
         "core/tests/test_frame.py": f'class DataFrame:\n    """{LONG}"""\n',
+        # Same class name as the real DataFrame, but not the pandas API.
+        "core/interchange/dataframe_protocol.py": f'class DataFrame:\n    def get_chunks(self):\n        """{LONG}"""\n',
+        "core/readers.py": f'def read_csv():\n    """{LONG}"""\n',
     }
     for relative, text in files.items():
         path = package / relative
@@ -91,7 +94,9 @@ def test_exported_names_reads_all_lists_and_reachable_classes(tmp_path):
     assert "Block" not in names
 
 
-def test_extract_skips_tests_and_drops_internal_names(tmp_path):
+def test_extract_skips_tests_excluded_files_and_internal_names(tmp_path):
     result = extract(make_package(tmp_path))
-    assert result.found == 2  # DataFrame and Block from core/frame.py, nothing from tests
-    assert [r["qualname"] for r in result.records] == ["DataFrame"]
+    # DataFrame and Block from core/frame.py, read_csv from core/readers.py;
+    # nothing from tests or the interchange protocol.
+    assert result.found == 3
+    assert [r["qualname"] for r in result.records] == ["DataFrame", "read_csv"]  # files in sorted order

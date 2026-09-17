@@ -380,3 +380,51 @@ hand-computed 123/256, 98/155 and 25/101.
 
 The prompt did not change; the differences are within what the retriever change in
 experiment 13 can explain and are not evidence of an improvement.
+
+## 16. Release audit: removing wrongly attributed documents
+
+A code review before release found two corpus problems:
+
+- `core/interchange/dataframe_protocol.py` defines an abstract interchange-protocol class that
+  is also named `DataFrame`. The public-name filter kept it, so `DataFrame.metadata` and
+  `DataFrame.get_chunks` were indexed as if they were pandas DataFrame methods. Before the fix
+  they appeared in the top 5 for 1 gold and 2 validation questions; none is a label.
+- Source files were read in file-system order, which is not guaranteed to be the same on every
+  machine. With two documents named `DataFrame`, that order decided which one training used.
+
+The file is now excluded by name and files are read in sorted order. The corpus lost exactly
+those 3 documents (1,262 remain, all others unchanged). Silver labels, train and validation
+splits were identical before and after. Both retrievers were retrained with seed 3 and
+everything was re-evaluated; the retrained model is used, as in experiment 13.
+
+Validation R@5 (any correct name): fine-tuned 0.536, hard negatives 0.649 (0.633 before).
+
+Gold, honest subset (n=191), R@5:
+
+| Method | Any correct name | Primary name only |
+|---|---|---|
+| BM25 | 0.38 | 0.28 |
+| Base embeddings | 0.42 | 0.32 |
+| Fine-tuned | 0.49 | 0.34 |
+| Fine-tuned + hard negatives | 0.62 | 0.43 |
+
+| Comparison (R@5, 95% CI) | Any correct name | Primary name only |
+|---|---|---|
+| Hard negatives vs fine-tuned | +0.13 [+0.08, +0.19] | +0.09 [+0.05, +0.15] |
+| Hard negatives vs BM25 | +0.25 [+0.17, +0.32] | +0.16 [+0.08, +0.23] |
+
+Answer generation with prompt C on all 300 gold questions:
+
+| Measure | Experiment 15 | Now |
+|---|---|---|
+| Correct document in the 3 excerpts | 156/259 (60%) | 157/259 (61%) |
+| Cites a correct document | 35 (14%) | 33 (13%) |
+| ... when a correct document was retrieved | 35/156 (22%) | 33/157 (21%) |
+| Names a correct function | 131 (51%) | 132 (51%) |
+| ... when a correct document was retrieved | 101/156 (65%) | 101/157 (64%) |
+| Cites a number with no excerpt | 1 | 0 |
+| Wrongly abstains | 80 (31%) | 79 (31%) |
+| Unanswerable: abstains | 19/41 (46%) | 19/41 (46%) |
+
+**Finding:** all changes are within run-to-run variation (experiment 13). The fix is about
+correctness of what the search shows, not about scores.
