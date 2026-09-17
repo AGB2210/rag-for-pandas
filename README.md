@@ -8,8 +8,8 @@ questions.
 
 People rarely ask "how do I use `dropna`". They ask "how do I delete rows with empty
 cells", and keyword search fails when the question and the documentation use different
-words. This project measures that problem honestly and closes part of it by fine-tuning a
-small embedding model on Stack Overflow question/answer pairs.
+words. This project measures that problem on a hand-labelled test set and closes part of it
+by fine-tuning a small embedding model on Stack Overflow question/answer pairs.
 
 ## Results
 
@@ -67,6 +67,9 @@ flowchart LR
     G --> H
     H --> I["Evaluation<br/>R@k with confidence intervals"]
     E --> I
+    H -->|top 3 documents| J["Local LLM<br/>cited answer"]
+    H --> K["FastAPI + React page"]
+    J --> K
 ```
 
 1. **Corpus.** Public docstrings of at least 20 words, extracted from pandas source with
@@ -76,7 +79,8 @@ flowchart LR
    correct, 50% loose, 16% wrong. The labeller was then fixed but not reviewed again. Used
    only to train and to choose settings.
 3. **Gold labels.** 300 questions labelled by hand with the best function and other correct
-   ones. Used only for the final score. See [annotations/README.md](annotations/README.md).
+   ones. Used only for scoring, never for training or choosing settings (see Limitations).
+   See [annotations/README.md](annotations/README.md).
 4. **Leakage protection.** Gold questions are removed from training data by id and by
    normalised title; the split raises an error if any gold question gets through.
 5. **Training.** MultipleNegativesRankingLoss with one mined hard negative per pair: the
@@ -89,8 +93,9 @@ flowchart LR
 ## Setup
 
 Developed on Windows 11 with Python 3.12.10 and an NVIDIA RTX 3050 (4 GB); the results
-above come from that machine. Installation from scratch on other systems has not been
-tested. Training also runs on CPU, more slowly.
+above come from that machine. CI installs the Python and web page dependencies from scratch on
+Ubuntu with a CPU build of PyTorch and runs the tests; training, GPU use and the browser tests
+were run only on the development machine. Training also runs on CPU, more slowly.
 
 ```bash
 python -m venv .venv
@@ -166,7 +171,7 @@ GPU (simulated by hiding the GPU) each gave the expected result.
 After the pipeline has been run (the service needs the corpus and the trained retriever):
 
 ```bash
-.venv/Scripts/python -m uvicorn rag_for_pandas.api:app --port 8000
+.venv/Scripts/python -m uvicorn rag_for_pandas.api:app --host 127.0.0.1 --port 8000
 ```
 
 Interactive documentation is at `http://127.0.0.1:8000/docs`. Models load once at startup.
@@ -265,12 +270,15 @@ start.bat            one-click setup and start on Windows
   (commit `a183ef5`, September 2026, after release 3.0.5). The user guide is not included, and
   2 gold questions are unanswerable because pandas has no docstring for `GroupBy.ngroups`.
 - Silver labels are loose, which limits what training can learn; a cross-encoder reranker
-  trained on them did not beat the retriever.
+  trained on them did not beat the retriever (experiment 10, run before the corpus fixes of
+  experiments 13 and 16 and not repeated).
 - The retriever is small (22M parameters) and was trained on 1,663 question-document pairs
   from 984 questions (training questions with more than 3 labels are skipped).
 - Each configuration was trained once (seed 3). Retraining after a small data change moved gold
   R@5 by 3-4 points, so single-run differences of that size are not meaningful. Mining hard
   negatives with the fine-tuned model instead of the base model was not tried.
+- The API has no authentication or rate limiting. It is meant to run on your own computer:
+  the commands in this README listen on 127.0.0.1 only.
 - The answer generator is a 1.5B-parameter model chosen to fit a 4 GB GPU. Its answers are
   checked only for citations and refusals, not for whether every statement is true, and
   they often name functions without citing them or add details not in the documentation.
