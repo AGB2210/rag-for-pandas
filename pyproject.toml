@@ -16,6 +16,7 @@ dependencies = [
     "fastapi",
     "httpx",
     "numpy",
+    "pydantic",
     "rank-bm25",
     "sentence-transformers",
     "torch",
