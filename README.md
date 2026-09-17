@@ -239,6 +239,8 @@ docs/              experiment log
 
 ## Data and licences
 
+- The code in this repository is released under the [MIT License](LICENSE). The data below
+  keeps its own licences.
 - pandas documentation text is from the pandas source code, BSD 3-Clause License.
 - Stack Overflow question titles in `annotations/` are licensed under
   [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); each row links to its question.
