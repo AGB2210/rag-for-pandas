@@ -2,8 +2,9 @@
 
 [![CI](https://github.com/AGB2210/rag-for-pandas/actions/workflows/ci.yml/badge.svg)](https://github.com/AGB2210/rag-for-pandas/actions/workflows/ci.yml)
 
-Search over the pandas API documentation that finds the right function for a question
-written in everyday words, trained and evaluated on real Stack Overflow questions.
+Search over the pandas API documentation for the function that answers a question written
+in everyday words, with short cited answers, trained and evaluated on real Stack Overflow
+questions.
 
 People rarely ask "how do I use `dropna`". They ask "how do I delete rows with empty
 cells", and keyword search fails when the question and the documentation use different
@@ -13,8 +14,8 @@ small embedding model on Stack Overflow question/answer pairs.
 ## Results
 
 Gold test set: 300 hand-labelled Stack Overflow questions, 259 answerable from the corpus.
-The table shows the 191 questions whose answer's name does **not** appear in the question
-title, where keyword matching cannot help. R@5 is the share of questions with a correct
+The table shows the 191 questions whose primary answer's name does **not** appear in the
+question title, where keyword matching cannot help. R@5 is the share of questions with a correct
 function in the top 5 results.
 
 | Method | R@5, any correct function | R@5, the single best function |
@@ -71,14 +72,16 @@ flowchart LR
 1. **Corpus.** Public docstrings of at least 20 words, extracted from pandas source with
    `ast` (pandas is never imported). Only names reachable from `import pandas` are kept.
 2. **Silver labels.** The pandas functions used in each question's accepted answer. Cheap
-   but loose: a manual review of 50 found 34% correct, 50% loose, 16% wrong. Used only to
-   train and to choose settings.
+   but loose: a manual review of 50 labels from the first version of the labeller found 34%
+   correct, 50% loose, 16% wrong. The labeller was then fixed but not reviewed again. Used
+   only to train and to choose settings.
 3. **Gold labels.** 300 questions labelled by hand with the best function and other correct
    ones. Used only for the final score. See [annotations/README.md](annotations/README.md).
 4. **Leakage protection.** Gold questions are removed from training data by id and by
    normalised title; the split raises an error if any gold question gets through.
-5. **Training.** MultipleNegativesRankingLoss with one mined hard negative per pair: a
-   document the base model ranks highly that is not a correct answer.
+5. **Training.** MultipleNegativesRankingLoss with one mined hard negative per pair: the
+   document the base model ranks highest, below its top 3, that does not carry a labelled
+   name. The top 3 are skipped because loose labels miss correct answers that rank there.
 6. **Answer generation.** The top 3 documents, numbered, go to a local language model with
    rules to cite them and a fixed sentence for when they do not answer the question. The
    prompt was chosen by comparing prompts on validation questions.
@@ -97,7 +100,8 @@ python -m venv .venv
 ```
 
 On Linux or macOS use `.venv/bin/python`. `requirements.txt` installs CUDA 12.8 builds of
-PyTorch; removing its `--extra-index-url` line installs the CPU build.
+PyTorch; removing its `--extra-index-url` line installs the CPU build. It pins the packages
+the code imports directly; the packages those depend on are not pinned.
 
 Continuous integration (`.github/workflows/ci.yml`) runs on every push and pull request: the
 Python tests with a CPU build of PyTorch, and the web page's component tests and build. None of
@@ -196,7 +200,7 @@ Requires Node.js 24 (developed with 24.16.0):
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm test
 npm run build
 ```
@@ -231,11 +235,19 @@ docs/                experiment log
 ## Limitations
 
 - Gold labels were made by a single annotator.
-- The corpus is API docstrings only; the pandas user guide is not included, and 2 gold
-  questions are unanswerable because pandas has no docstring for `GroupBy.ngroups`.
+- Gold was scored after several stages of the project, and those scores guided what to try
+  next (for example, hard negatives). No setting was chosen by its gold score; seeds, prompts
+  and reranking were decided on validation data.
+- The corpus is API docstrings only, from an unreleased development snapshot of pandas
+  (commit `a183ef5`, September 2026, after release 3.0.5). The user guide is not included, and
+  2 gold questions are unanswerable because pandas has no docstring for `GroupBy.ngroups`.
 - Silver labels are loose, which limits what training can learn; a cross-encoder reranker
   trained on them did not beat the retriever.
-- The retriever is small (22M parameters) and was trained on 1,233 questions.
+- The retriever is small (22M parameters) and was trained on 1,663 question-document pairs
+  from 984 questions (training questions with more than 3 labels are skipped).
+- Each configuration was trained once (seed 3). Retraining after a small data change moved gold
+  R@5 by 3-4 points, so single-run differences of that size are not meaningful. Mining hard
+  negatives with the fine-tuned model instead of the base model was not tried.
 - The answer generator is a 1.5B-parameter model chosen to fit a 4 GB GPU. Its answers are
   checked only for citations and refusals, not for whether every statement is true, and
   they often name functions without citing them or add details not in the documentation.

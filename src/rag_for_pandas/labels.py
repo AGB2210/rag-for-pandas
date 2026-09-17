@@ -1,7 +1,9 @@
 """Silver labels: pandas names used in each question's accepted answer.
 
-Automatic and cheap, but loose: a manual review of 50 labels found 34% correct,
-50% loose and 16% wrong. Used for training and validation, never as the final test.
+Automatic and cheap, but loose. A manual review of 50 labels from the first
+version of this labeller found 34% correct, 50% loose and 16% wrong; the fixes
+that followed (other libraries' methods, string-only names) were not
+re-reviewed. Used for training and validation, never as the final test.
 """
 
 from __future__ import annotations

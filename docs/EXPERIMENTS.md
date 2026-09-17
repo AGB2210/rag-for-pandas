@@ -7,8 +7,9 @@ explain why the pipeline looks the way it does.
 Conventions used throughout:
 
 - **R@k**: share of queries with at least one correct pandas name in the top k results.
-- **Honest subset**: queries whose answer's name does not appear in the question title.
-  Queries like "How to use dropna" are easy for keyword search and hide real differences.
+- **Honest subset**: queries whose answer's name does not appear in the question title. For
+  gold this checks the primary name; for silver, any label. Queries like "How to use dropna"
+  are easy for keyword search and hide real differences.
 - **Gap and 95% CI**: difference in R@5 between two methods on the same queries, with a
   paired bootstrap interval (10,000 resamples). R@5 was fixed as the comparison metric
   before any comparison was run. A gap counts as real only if its interval excludes zero.

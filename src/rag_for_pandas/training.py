@@ -40,6 +40,7 @@ NEGATIVE_SKIP_TOP = 3
 EPOCHS = 3
 BATCH_SIZE = 32
 LEARNING_RATE = 2e-5
+# Passed as warmup_steps: transformers reads a float below 1 as a share of all steps.
 WARMUP_FRACTION = 0.1
 SEED = 42
 

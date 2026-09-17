@@ -1,1 +1,1 @@
-"""Search over pandas API documentation, evaluated on real Stack Overflow questions."""
+"""Retrieval-augmented answers over the pandas API documentation, evaluated on real Stack Overflow questions."""

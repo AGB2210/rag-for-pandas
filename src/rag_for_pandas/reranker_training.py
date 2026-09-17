@@ -29,6 +29,7 @@ MAX_SEQ_LENGTH = 256
 EPOCHS = 2
 BATCH_SIZE = 16
 LEARNING_RATE = 2e-5
+# Passed as warmup_steps: transformers reads a float below 1 as a share of all steps.
 WARMUP_FRACTION = 0.1
 
 
