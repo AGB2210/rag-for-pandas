@@ -20,6 +20,10 @@ from typing import Protocol
 
 from rag_for_pandas.corpus import final_name
 
+# The local model the prompt below was chosen with. Defined here rather than in
+# local_generator.py so it can be read without loading PyTorch.
+LOCAL_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
+
 CONTEXT_DOCS = 3
 # The median docstring is 194 words, so most excerpts are complete; long ones are cut.
 MAX_EXCERPT_WORDS = 200

@@ -9,7 +9,7 @@ from __future__ import annotations
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-LOCAL_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
+from rag_for_pandas.generation import LOCAL_MODEL
 MAX_NEW_TOKENS = 250
 
 

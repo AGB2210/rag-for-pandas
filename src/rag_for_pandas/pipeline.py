@@ -8,7 +8,16 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from rag_for_pandas import paths
-from rag_for_pandas.generation import CONTEXT_DOCS, Generator, build_messages, cited_indices, excerpt, invalid_citations, is_abstention
+from rag_for_pandas.generation import (
+    CONTEXT_DOCS,
+    LOCAL_MODEL,
+    Generator,
+    build_messages,
+    cited_indices,
+    excerpt,
+    invalid_citations,
+    is_abstention,
+)
 from rag_for_pandas.jsonl import load_jsonl
 
 # Set to a model folder or Hugging Face name; "none" for RAG_FOR_PANDAS_GENERATOR disables answers.
@@ -84,7 +93,7 @@ def load_pipeline() -> Pipeline:
     # Imported here so that importing this module, as the tests do, loads no models.
     from sentence_transformers import SentenceTransformer
 
-    from rag_for_pandas.local_generator import LOCAL_MODEL, LocalGenerator
+    from rag_for_pandas.local_generator import LocalGenerator
     from rag_for_pandas.retrieval import EmbeddingRetriever
 
     docs = load_jsonl(paths.CORPUS)
