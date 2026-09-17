@@ -1,5 +1,7 @@
 # docsearch
 
+[![CI](https://github.com/AGB2210/rag-for-pandas/actions/workflows/ci.yml/badge.svg)](https://github.com/AGB2210/rag-for-pandas/actions/workflows/ci.yml)
+
 Search over the pandas API documentation that finds the right function for a question
 written in everyday words, trained and evaluated on real Stack Overflow questions.
 
