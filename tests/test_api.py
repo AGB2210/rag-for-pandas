@@ -84,6 +84,20 @@ def test_answer_marks_cited_sources_and_invalid_citations(client):
         {"number": 3, "name": "read_csv", "cited": False, "named": False},
     ]
     assert body["invalid_citations"] == [7]
+    assert body["names_outside_sources"] == []
+
+
+def test_answer_lists_names_that_no_source_documents():
+    # read_csv is a source here; to_numeric is not documented in the fake corpus at all.
+    with make_client(FakeGenerator("Use `DataFrame.fillna`, then `pd.to_numeric()` and `read_csv`.")) as test_client:
+        assert test_client.post("/answer", json={"question": "fill"}).json()["names_outside_sources"] == []
+
+    docs = [*DOCS, {"qualname": "to_numeric", "docstring": "Convert to a number.", "source_file": "core/tools.py"}]
+    app = create_app(lambda: Pipeline(docs, FakeRetriever(), FakeGenerator("Use `pd.to_numeric()`.")), frontend=None)
+    with TestClient(app) as test_client:
+        body = test_client.post("/answer", json={"question": "to a number"}).json()
+    assert body["names_outside_sources"] == ["to_numeric"]
+    assert not any(source["named"] for source in body["sources"])
 
 
 def test_answer_marks_a_source_that_is_named_but_not_cited():

@@ -1,7 +1,10 @@
 from evaluate_generation import grade, rate, summary_lines
 
 
-def record(answerable=True, retrieved=True, cited=False, named=False, invalid=False, correct=False, points=False, names=False, abstained=False):
+def record(
+    answerable=True, retrieved=True, cited=False, named=False, invalid=False, correct=False, points=False, names=False,
+    outside=False, abstained=False,
+):
     return {
         "answerable": answerable,
         "context_has_correct": retrieved,
@@ -11,6 +14,7 @@ def record(answerable=True, retrieved=True, cited=False, named=False, invalid=Fa
         "cites_correct": correct,
         "points_to_correct": points,
         "names_correct": names,
+        "outside": ["concat"] if outside else [],
         "abstained": abstained,
     }
 
@@ -19,10 +23,10 @@ RECORDS = [
     record(cited=True, correct=True, points=True, names=True),
     record(named=True, points=True, names=True),
     record(abstained=True),
-    record(retrieved=False, names=True),
+    record(retrieved=False, names=True, outside=True),
     record(retrieved=False, abstained=True, invalid=True),
     record(answerable=False, retrieved=False, abstained=True),
-    record(answerable=False, retrieved=False, cited=True),
+    record(answerable=False, retrieved=False, cited=True, outside=True),
 ]
 
 
@@ -49,6 +53,11 @@ def test_summary_counts_each_group_separately():
     assert value(lines, "unanswerable (2)", "answer abstains") == "1/2 (50%)"
     assert value(lines, "unanswerable (2)", "answer cites an excerpt anyway") == "1/2 (50%)"
     assert value(lines, "unanswerable (2)", "answer points to an excerpt anyway") == "1/2 (50%)"
+    assert value(lines, "answerable (5)", "answer is warned") == "1/5 (20%)"
+    assert value(lines, "answerable, correct document retrieved (3)", "answer is warned") == "0/3 (0%)"
+    assert value(lines, "answerable, no correct document retrieved (2)", "... and is warned") == "1/1 (100%)"
+    assert value(lines, "answerable, no correct document retrieved (2)", "answer is warned") == "1/2 (50%)"
+    assert value(lines, "unanswerable (2)", "answer is warned") == "1/2 (50%)"
 
 
 def test_grade_adds_every_check_from_the_saved_answer():
@@ -56,10 +65,10 @@ def test_grade_adds_every_check_from_the_saved_answer():
         "answerable": True,
         "labels": ["dropna"],
         "context": ["DataFrame.fillna", "DataFrame.dropna", "read_csv"],
-        "answer": "Use DataFrame.dropna to remove them [1]. See also [7].",
+        "answer": "Use DataFrame.dropna to remove them [1], or `pd.concat()`. See also [7].",
     }
 
-    graded = grade(saved)
+    graded = grade(saved, {"dropna", "fillna", "read_csv", "concat"})
 
     assert graded["answer"] == saved["answer"]
     assert graded["context_has_correct"] is True
@@ -69,6 +78,7 @@ def test_grade_adds_every_check_from_the_saved_answer():
     assert graded["cites_correct"] is False  # the citation points at fillna
     assert graded["points_to_correct"] is True  # the name points at dropna
     assert graded["names_correct"] is True
+    assert graded["outside"] == ["concat"]
     assert graded["abstained"] is False
 
 

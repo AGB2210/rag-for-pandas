@@ -30,6 +30,8 @@ export interface AnswerResponse {
   abstained: boolean
   sources: AnswerSource[]
   invalid_citations: number[]
+  /** pandas names the answer recommends that none of its sources documents. */
+  names_outside_sources: string[]
 }
 
 export class ApiError extends Error {

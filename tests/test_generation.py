@@ -10,6 +10,7 @@ from rag_for_pandas.generation import (
     is_abstention,
     named_indices,
     names_correct_function,
+    names_outside_sources,
     pointed_indices,
     points_to_correct_document,
 )
@@ -96,6 +97,30 @@ def test_named_indices_compares_last_names_unless_one_is_written_in_full():
     assert named_indices("Use df.dropna().", docs) == [0, 1, 2]
     assert named_indices("Use Series.dropna.", docs) == [1]
     assert named_indices("Use MultiIndex.dropna.", docs) == [0, 1, 2]  # no excerpt has that full name
+
+
+DOCUMENTED = {"dropna", "fillna", "read_csv", "concat", "merge", "DataFrame", "Styler", "apply"}
+
+
+def test_names_outside_sources_are_documented_names_no_excerpt_carries():
+    assert names_outside_sources("Use `pd.concat()` and then DataFrame.dropna.", DOCS, DOCUMENTED) == ["concat"]
+    assert names_outside_sources("Use DataFrame.dropna [1].", DOCS, DOCUMENTED) == []
+    assert names_outside_sources("Use `merge`, then `concat()`.", DOCS, DOCUMENTED) == ["concat", "merge"]
+    assert names_outside_sources("Merge the tables.", DOCS, DOCUMENTED) == []  # an ordinary word
+    assert names_outside_sources("Use `frobnicate()`.", DOCS, DOCUMENTED) == []  # not a documented name
+
+
+def test_names_outside_sources_reads_prose_not_example_code():
+    answer = "Use `dropna`:\n\n```python\ndf = pd.concat([a, b]).dropna()\n```\nThen `merge` them."
+    assert names_outside_sources(answer, DOCS, DOCUMENTED) == ["merge"]
+    cut_off = "Use `dropna`:\n\n```python\ndf = pd.concat([a, b])"  # stopped at the length limit
+    assert names_outside_sources(cut_off, DOCS, DOCUMENTED) == []
+
+
+def test_names_outside_sources_skips_generic_names_and_the_excerpts_own_classes():
+    docs = docs_named("Styler.background_gradient")
+    assert names_outside_sources("Build a `pd.DataFrame`, then use the `Styler` class.", docs, DOCUMENTED) == []
+    assert names_outside_sources("Use `Styler.apply`.", docs, DOCUMENTED) == ["apply"]
 
 
 def test_pointed_indices_join_cited_and_named_excerpts():

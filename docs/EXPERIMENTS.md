@@ -514,3 +514,75 @@ shows both.
 - On unanswerable questions more excerpts are now marked (13 against 8). The model named
   those functions before; the link makes it visible.
 - Links were classified by one unblinded reading: the reader knew the rule.
+
+## 18. Warning for functions from outside the sources (adopted)
+
+Experiment 12 found answers that name a correct function although no correct document was
+retrieved: the model answering from its own knowledge. Experiment 17 made the grounded case
+visible; this one flags the ungrounded case. An answer is **warned** when its prose writes a
+documented pandas name as code, by the same test as `named_indices`, and none of its three
+excerpts carries that name (`names_outside_sources` in `rag_for_pandas/generation.py`).
+
+**Design.** Shaped on validation questions 1-100 and 201-308, whose answers had already been
+read for experiment 17. Two choices came from that data:
+
+- Only prose is read; fenced code blocks are removed first. Reading example code too raised
+  the flagged names on those questions from 63 to 89, the additions being mostly helper calls
+  such as `apply`, `columns` and `index` that the answer is not recommending.
+- `DataFrame` and `Series` are skipped, as the silver labeller already does.
+
+All 63 names flagged on the design questions were pandas names the answer recommended.
+
+Fixed before the judging answers were read: judge once on validation questions 101-200,
+generated with the current retriever and not read before, and adopt if reading every flagged
+name finds at most 5% wrong (the matched text is not that pandas name: an ordinary word, a
+parameter, a variable, another library's function).
+
+**Judging (questions 101-200, labelled document retrieved for 62, not for 38).** The rule
+flagged 33 names in 24 answers. None was clearly wrong. One is unclear: "the `map()`
+function" could be Python's or pandas'. Two were the class of one of the excerpts (`Styler`
+for an answer built on `Styler.background_gradient`, and `DatetimeIndex`): the pandas name,
+but a warning nobody needs. The condition is met.
+
+One change was made after judging and is therefore not covered by that reading: the classes
+the excerpts belong to now count as in the sources. It can only remove flags (33 to 31 names
+on the judging questions, 63 to 62 on the design questions). With the final rule,
+reproduced by `python scripts/compare_prompts.py --prompts C --start N --questions M`:
+
+| | 1-100 | 201-308 | 101-200 (judging) |
+|---|---|---|---|
+| Answers warned | 26/100 | 20/108 | 22/100 |
+| ... labelled document retrieved | 10/57 | 6/57 | 12/62 |
+| ... not retrieved | 16/43 | 14/51 | 10/38 |
+| Names flagged | 33 | 29 | 31 |
+
+**Gold, scored once** from the saved answers of experiment 16:
+
+| Group | Answers warned |
+|---|---|
+| Answerable (n=259) | 69 (27%) |
+| ... correct document retrieved (n=157) | 32 (20%) |
+| ... no correct document retrieved (n=102) | 37 (36%) |
+| ... of those, the answers naming a correct function anyway (n=31) | 26 (84%) |
+| Unanswerable (n=41) | 10 (24%) |
+
+No answer that abstains is warned. Of the 180 answerable questions whose answer does not
+abstain, 172 now either point to a source or carry the warning; 8 have neither and get the
+general "check it" hint.
+
+**Findings.**
+
+- The warning means "not from the sources", not "wrong". In 33 of the 69 warned answers to
+  answerable questions, a flagged name is a correct label: the model was right from memory.
+- The warning surfaced three validation answers (of 308) that answered the worked example's
+  question instead of the real one: "To read an Excel file, use `read_excel`".
+
+**Decision:** adopted. `/answer` returns `names_outside_sources`, and the page names those
+functions and asks the reader to check them.
+
+**Limits.**
+
+- Only the 689 names in the corpus are known, so an invented function such as
+  `.remove_time()` is not flagged.
+- A function used only inside example code is not flagged.
+- Flags were classified by one unblinded reading, as in experiment 17.

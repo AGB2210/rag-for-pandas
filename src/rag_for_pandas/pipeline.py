@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from rag_for_pandas import paths
+from rag_for_pandas.corpus import final_name
 from rag_for_pandas.generation import (
     CONTEXT_DOCS,
     LOCAL_MODEL,
@@ -18,6 +19,7 @@ from rag_for_pandas.generation import (
     invalid_citations,
     is_abstention,
     named_indices,
+    names_outside_sources,
 )
 from rag_for_pandas.jsonl import load_jsonl
 
@@ -54,6 +56,7 @@ class AnswerResult:
     abstained: bool
     sources: list[Source]
     invalid_citations: list[int]
+    names_outside_sources: list[str]  # pandas names the answer recommends that no source documents
 
 
 class Pipeline:
@@ -61,6 +64,7 @@ class Pipeline:
         self.docs = docs
         self.retriever = retriever
         self.generator = generator
+        self.documented_names = {final_name(doc["qualname"]) for doc in docs}
         # One GPU cannot safely run two generations at once, so requests take turns.
         # Searches do not take the lock: they are fast and do not wait behind an answer.
         self._generation_lock = threading.Lock()
@@ -88,6 +92,7 @@ class Pipeline:
             abstained=is_abstention(text),
             sources=[Source(number + 1, doc["qualname"], number in cited, number in named) for number, doc in enumerate(context)],
             invalid_citations=invalid_citations(text, len(context)),
+            names_outside_sources=names_outside_sources(text, context, self.documented_names),
         )
 
 

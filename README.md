@@ -60,6 +60,13 @@ named. The answer's text is not changed, so refusals are not affected. The rule 
 100 validation questions and judged on 108 unseen ones, where 1 of 61 links was wrong and 11
 were to a same-named method of another class; see experiment 17. A link says which function
 the answer names, not that every statement in the answer agrees with that source.
+
+The opposite case gets a warning: when an answer recommends a documented pandas function
+that none of its 3 sources carries, the function came from the model's own knowledge, and
+the page says so. Of the 31 gold answers that name a correct function although no correct
+document was retrieved, 26 are warned. The warning means "not from the sources", not
+"wrong": in 33 of the 69 warned answers the outside function is a correct one. See
+experiment 18.
 Numbers are produced by `scripts/evaluate_generation.py`.
 
 ## How it works
@@ -99,6 +106,7 @@ flowchart LR
    prompt was chosen by comparing prompts on validation questions.
 7. **Source links.** The model seldom writes citations, so code marks each excerpt whose
    function the answer names. The page shows both: sources the answer cited and sources it named.
+   It also warns when the answer recommends a documented function that none of its sources carries.
 
 ## Setup
 
@@ -200,7 +208,7 @@ Interactive documentation is at `http://127.0.0.1:8000/docs`. Models load once a
 |---|---|---|
 | `GET /health` | | status, number of documents, whether answers are enabled |
 | `POST /search` | `{"query": "...", "k": 5}` | top k documents with score, excerpt and source file |
-| `POST /answer` | `{"question": "..."}` | an answer, whether it abstained, and its 3 sources, each marked as cited, named or neither |
+| `POST /answer` | `{"question": "..."}` | an answer, whether it abstained, its 3 sources, each marked as cited, named or neither, and the functions it names from outside them |
 
 Queries must be 1-500 characters after trimming whitespace, and `k` must be 1-20; other
 requests get HTTP 422. Only one answer is generated at a time; searches do not wait for it.
@@ -221,7 +229,8 @@ A response from the service on the development machine:
     {"number": 2, "name": "Categorical.isnull", "cited": false, "named": false},
     {"number": 3, "name": "Categorical.isna", "cited": false, "named": false}
   ],
-  "invalid_citations": []
+  "invalid_citations": [],
+  "names_outside_sources": []
 }
 ```
 
@@ -241,9 +250,9 @@ Environment variables:
 
 A React page (Vite, TypeScript) in `frontend/` asks questions or searches the documentation.
 It shows each answer with its sources, marks which sources the answer cited or named, and warns
-when an answer points to no source, cites a source that does not exist, or when the
-documentation did not answer the question. Search results link to the pandas source file at the
-pinned commit.
+when an answer points to no source, names a function that is in none of its sources, cites a
+source that does not exist, or when the documentation did not answer the question. Search
+results link to the pandas source file at the pinned commit.
 
 Requires Node.js 24 (developed with 24.16.0):
 
@@ -304,6 +313,9 @@ start.bat            one-click setup and start on Windows
 - The answer generator is a 1.5B-parameter model chosen to fit a 4 GB GPU. Its answers are
   checked only for citations, named functions and refusals, not for whether every statement
   is true, and they often add details not in the documentation.
+- The warning for functions from outside the sources knows only the 689 names in the corpus
+  and reads only the answer's prose, so an invented function name, or one used only inside
+  example code, is not flagged.
 - The question goes to the model as written, so a question can tell it to ignore its rules
   (asked to reply with one fixed word, it did). The text is shown as plain text, and such an
   answer points to no source, which the page says.

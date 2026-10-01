@@ -4,7 +4,8 @@ For each prompt, measures how often answers cite an excerpt, cite a number that
 points at no excerpt, cite a document carrying a silver label, and abstain.
 A second line counts answers that cite or name a labelled document (naming is
 linked by rag_for_pandas.generation.named_indices) and gives the gain over
-citing alone with a paired bootstrap interval.
+citing alone with a paired bootstrap interval. A third line counts answers
+warned for recommending a pandas name that none of their excerpts carries.
 Abstention is split by whether the retrieved excerpts contain a labelled
 document: abstaining is right when they do not, and wrong when they do.
 Silver labels are loose, so these rates are approximate; gold is used only
@@ -49,6 +50,7 @@ from rag_for_pandas.generation import (
     invalid_citations,
     is_abstention,
     names_correct_function,
+    names_outside_sources,
     numbered_context,
     points_to_correct_document,
     user_message,
@@ -142,6 +144,7 @@ def main() -> None:
     args = parser.parse_args()
 
     docs = load_jsonl(paths.CORPUS)
+    documented_names = {final_name(d["qualname"]) for d in docs}
     queries = load_jsonl(paths.VALIDATION_QUERIES)[args.start : args.start + args.questions]
     rankings = embedding_rankings(docs, queries, CONTEXT_DOCS, str(paths.HARD_NEGATIVE_MODEL), cache=None)
     contexts = [[docs[i] for i in ranking] for ranking in rankings]
@@ -177,10 +180,19 @@ def main() -> None:
             f"    cites or names a labelled document: {points}/{len(queries)}, "
             f"{(points - correct) / len(queries):+.3f} [{low:+.3f}, {high:+.3f}] against citing one"
         )
+        outside = [names_outside_sources(a, ctx, documented_names) for a, ctx in zip(answers, contexts)]
+        warned_with = sum(bool(o) for o, h in zip(outside, has_answer) if h)
+        warned_without = sum(bool(o) for o, h in zip(outside, has_answer) if not h)
+        print(
+            f"    warned for a name outside the excerpts: {warned_with + warned_without}/{len(queries)} "
+            f"(labelled document retrieved: {warned_with}/{answerable}, not: {warned_without}/{unanswerable}), "
+            f"{sum(len(o) for o in outside)} names"
+        )
         result = {
             "prompt": name, "start": args.start, "questions": len(queries), "cites": cites, "invalid": invalid,
             "correct": correct, "points_to_correct": points, "names_correct": names,
             "abstain_when_answer_in_context": wrong_abstain, "abstain_when_not": right_abstain,
+            "warned": warned_with + warned_without,
         }
         print("RESULT " + json.dumps(result), flush=True)
         saved = [

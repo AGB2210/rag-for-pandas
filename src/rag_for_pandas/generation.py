@@ -21,10 +21,11 @@ from __future__ import annotations
 
 import builtins
 import re
+from collections.abc import Iterable
 from typing import Protocol
 
 from rag_for_pandas.corpus import final_name
-from rag_for_pandas.labels import FOREIGN_ROOTS
+from rag_for_pandas.labels import FOREIGN_ROOTS, GENERIC_NAMES
 
 # The local model the prompt below was chosen with. Defined here rather than in
 # local_generator.py so it can be read without loading PyTorch.
@@ -60,6 +61,8 @@ EXAMPLES = [
 
 CITATION = re.compile(r"\[(\d+)\]")
 NON_SPACE = re.compile(r"\S+")
+# A ``` block; an answer cut off at the length limit may leave its last block open.
+FENCED_CODE = re.compile(r"```.*?(?:```|\Z)", re.DOTALL)
 
 
 class Generator(Protocol):
@@ -147,6 +150,25 @@ def named_indices(answer: str, docs: list[dict]) -> list[int]:
         i
         for i, doc in enumerate(docs)
         if i in in_full or (final_name(doc["qualname"]) not in full_names and _names_as_code(answer, final_name(doc["qualname"])))
+    ]
+
+
+def names_outside_sources(answer: str, docs: list[dict], documented_names: Iterable[str]) -> list[str]:
+    """Documented pandas names the answer tells the reader to use that none of its excerpts carry.
+
+    Such a name came from the model's own knowledge rather than from the
+    excerpts, right or wrong, so the reader is told to check it. Only the
+    prose is read: example code is full of helpers such as `pd.DataFrame(...)`
+    that the answer is not recommending. A name counts under the same test as
+    in `named_indices` (experiment 18 in docs/EXPERIMENTS.md). The class an
+    excerpt belongs to, such as `Styler` for `Styler.apply`, is in the sources.
+    """
+    prose = FENCED_CODE.sub(" ", answer)
+    in_sources = {part for doc in docs for part in doc["qualname"].split(".")}
+    return [
+        name
+        for name in sorted(documented_names)
+        if name in prose and name not in in_sources and name not in GENERIC_NAMES and _names_as_code(prose, name)
     ]
 
 

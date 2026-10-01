@@ -63,6 +63,7 @@ class AnswerResponse(BaseModel):
     abstained: bool
     sources: list[AnswerSource]
     invalid_citations: list[int]
+    names_outside_sources: list[str] = Field(description="pandas names the answer recommends that none of its sources documents")
 
 
 class HealthResponse(BaseModel):
@@ -118,6 +119,7 @@ def create_app(load: Callable[[], Pipeline] = load_pipeline, frontend: Path | No
             abstained=result.abstained,
             sources=[AnswerSource(**asdict(source)) for source in result.sources],
             invalid_citations=result.invalid_citations,
+            names_outside_sources=result.names_outside_sources,
         )
 
     # Mounted last: routes registered earlier (the API and /docs) are matched first,

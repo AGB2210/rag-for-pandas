@@ -10,7 +10,9 @@ questions, checks whether the answer abstains.
 
 An answer "points to" an excerpt when it cites its number or names its
 function as code. Naming is linked by rag_for_pandas.generation.named_indices
-(experiment 17 in docs/EXPERIMENTS.md), since the model rarely cites.
+(experiment 17 in docs/EXPERIMENTS.md), since the model rarely cites. An
+answer is "warned" when it recommends a documented pandas name that none of
+its excerpts carries (experiment 18): that name came from the model itself.
 
 Also measures whether the answer names a correct function at all, cited or
 not. That measure was first computed by hand after reading answers
@@ -41,16 +43,18 @@ from rag_for_pandas.generation import (
     is_abstention,
     named_indices,
     names_correct_function,
+    names_outside_sources,
     points_to_correct_document,
 )
 from rag_for_pandas.gold import read_gold_rows
 from rag_for_pandas.jsonl import load_jsonl, write_jsonl
 
 
-def grade(record: dict) -> dict:
+def grade(record: dict, documented_names: set[str]) -> dict:
     """The record with every automatic check added.
 
-    Checks need only the saved answer, the names of its excerpts and the labels.
+    Checks need only the saved answer, the names of its excerpts, the labels
+    and the names the corpus documents.
     """
     context = [{"qualname": name} for name in record["context"]]
     answer, labels = record["answer"], record["labels"]
@@ -63,6 +67,7 @@ def grade(record: dict) -> dict:
         "cites_correct": cites_correct_document(answer, context, labels),
         "points_to_correct": points_to_correct_document(answer, context, labels),
         "names_correct": names_correct_function(answer, labels),
+        "outside": names_outside_sources(answer, context, documented_names),
         "abstained": is_abstention(answer),
     }
 
@@ -74,6 +79,7 @@ def generate_records() -> list[dict]:
     from rag_for_pandas.retrieval import embedding_rankings
 
     docs = load_jsonl(paths.CORPUS)
+    documented_names = {final_name(d["qualname"]) for d in docs}
     rows = read_gold_rows()
     rankings = embedding_rankings(docs, [{"query": r["query"]} for r in rows], CONTEXT_DOCS, str(paths.HARD_NEGATIVE_MODEL), cache=None)
     generator = LocalGenerator()
@@ -90,7 +96,7 @@ def generate_records() -> list[dict]:
             "labels": labels,
             "context": [d["qualname"] for d in context],
             "answer": answer,
-        }))
+        }, documented_names))
     return records
 
 
@@ -103,6 +109,8 @@ def summary_lines(records: list[dict]) -> list[str]:
     retrieved = [r for r in answerable if r["context_has_correct"]]
     missed = [r for r in answerable if not r["context_has_correct"]]
     unanswerable = [r for r in records if not r["answerable"]]
+    # Answers that name a correct function their excerpts do not contain: the model's own knowledge.
+    own_knowledge = [r for r in missed if r["names_correct"]]
 
     def count(items: list[dict], key: str) -> int:
         return sum(bool(r[key]) for r in items)
@@ -121,6 +129,7 @@ def summary_lines(records: list[dict]) -> list[str]:
         f"  answer cites a correct document:        {rate(count(answerable, 'cites_correct'), len(answerable))}",
         f"  answer points to a correct document:    {rate(count(answerable, 'points_to_correct'), len(answerable))}",
         f"  answer names a correct function:        {rate(count(answerable, 'names_correct'), len(answerable))}",
+        f"  answer is warned:                       {rate(count(answerable, 'outside'), len(answerable))}",
         f"  answer wrongly abstains:                {rate(count(answerable, 'abstained'), len(answerable))}",
         "",
         f"answerable, correct document retrieved ({len(retrieved)})",
@@ -128,16 +137,20 @@ def summary_lines(records: list[dict]) -> list[str]:
         f"  answer points to a correct document:    {rate(count(retrieved, 'points_to_correct'), len(retrieved))}",
         f"  answer names a correct function:        {rate(count(retrieved, 'names_correct'), len(retrieved))}",
         f"  answer cites an excerpt:                {rate(count(retrieved, 'cited'), len(retrieved))}",
+        f"  answer is warned:                       {rate(count(retrieved, 'outside'), len(retrieved))}",
         f"  answer wrongly abstains:                {rate(count(retrieved, 'abstained'), len(retrieved))}",
         "",
         f"answerable, no correct document retrieved ({len(missed)})",
         f"  answer abstains:                        {rate(count(missed, 'abstained'), len(missed))}",
         f"  answer names a correct function anyway: {rate(count(missed, 'names_correct'), len(missed))}",
+        f"  ... and is warned:                      {rate(count(own_knowledge, 'outside'), len(own_knowledge))}",
+        f"  answer is warned:                       {rate(count(missed, 'outside'), len(missed))}",
         "",
         f"unanswerable ({len(unanswerable)})",
         f"  answer abstains:                        {rate(count(unanswerable, 'abstained'), len(unanswerable))}",
         f"  answer cites an excerpt anyway:         {rate(count(unanswerable, 'cited'), len(unanswerable))}",
         f"  answer points to an excerpt anyway:     {rate(pointing(unanswerable), len(unanswerable))}",
+        f"  answer is warned:                       {rate(count(unanswerable, 'outside'), len(unanswerable))}",
     ]
 
 
@@ -147,7 +160,8 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.from_saved:
-        records = [grade(record) for record in load_jsonl(paths.GOLD_ANSWERS)]
+        documented_names = {final_name(d["qualname"]) for d in load_jsonl(paths.CORPUS)}
+        records = [grade(record, documented_names) for record in load_jsonl(paths.GOLD_ANSWERS)]
     else:
         start = time.perf_counter()
         records = generate_records()

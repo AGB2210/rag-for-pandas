@@ -36,6 +36,7 @@ const ANSWER: AnswerResponse = {
     { number: 3, name: 'read_csv', cited: false, named: false },
   ],
   invalid_citations: [],
+  names_outside_sources: [],
 }
 
 afterEach(() => {
@@ -81,6 +82,27 @@ describe('App', () => {
     expect(items[0]).toHaveTextContent('named')
     expect(items[0]).not.toHaveTextContent('cited')
     expect(screen.queryByText(/does not cite or name a source/)).not.toBeInTheDocument()
+  })
+
+  it('names the functions an answer took from outside its sources', async () => {
+    fakeServer(200, {
+      ...ANSWER,
+      answer: 'Use `pd.concat()` or `merge`.',
+      sources: ANSWER.sources.map((s) => ({ ...s, cited: false, named: false })),
+      names_outside_sources: ['concat', 'merge'],
+    })
+    await submit('combine tables')
+
+    const hint = await screen.findByText(/which are not in the sources below/)
+    expect(hint).toHaveTextContent('The answer names concat and merge, which are not in the sources below, so check them')
+    expect(screen.queryByText(/does not cite or name a source/)).not.toBeInTheDocument()
+  })
+
+  it('uses the singular for one outside name, beside a source that is named', async () => {
+    fakeServer(200, { ...ANSWER, names_outside_sources: ['concat'] })
+    await submit('combine tables')
+
+    expect(await screen.findByText(/which is not in the sources below/)).toHaveTextContent('names concat, which is not')
   })
 
   it('warns when an answer cites nothing or cites missing sources', async () => {

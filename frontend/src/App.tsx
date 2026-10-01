@@ -54,8 +54,26 @@ function SourceTags({ source }: { source: AnswerSource }) {
   )
 }
 
+/** Names the answer recommends that came from the model itself, not from the sources shown. */
+function OutsideNames({ names }: { names: string[] }) {
+  return (
+    <p className="hint">
+      The answer names{' '}
+      {names.map((name, index) => (
+        <span key={name}>
+          {index > 0 && (index === names.length - 1 ? ' and ' : ', ')}
+          <code>{name}</code>
+        </span>
+      ))}
+      , which {names.length === 1 ? 'is' : 'are'} not in the sources below, so check {names.length === 1 ? 'it' : 'them'} against the
+      documentation.
+    </p>
+  )
+}
+
 function AnswerView({ data }: { data: AnswerResponse }) {
   const pointsToAny = data.sources.some((source) => source.cited || source.named)
+  const outside = data.names_outside_sources
   return (
     <article className="answer">
       <h2>Answer</h2>
@@ -69,7 +87,8 @@ function AnswerView({ data }: { data: AnswerResponse }) {
           The answer cites sources that do not exist: {data.invalid_citations.map((n) => `[${n}]`).join(', ')}
         </p>
       )}
-      {!data.abstained && !pointsToAny && (
+      {outside.length > 0 && <OutsideNames names={outside} />}
+      {!data.abstained && !pointsToAny && outside.length === 0 && (
         <p className="hint">This answer does not cite or name a source below, so check it against the documentation.</p>
       )}
       <h3>Sources given to the model</h3>
