@@ -79,18 +79,28 @@ def test_answer_marks_cited_sources_and_invalid_citations(client):
     assert body["question"] == "delete empty rows"  # surrounding whitespace removed
     assert body["abstained"] is False
     assert body["sources"] == [
-        {"number": 1, "name": "DataFrame.dropna", "cited": True},
-        {"number": 2, "name": "DataFrame.fillna", "cited": False},
-        {"number": 3, "name": "read_csv", "cited": False},
+        {"number": 1, "name": "DataFrame.dropna", "cited": True, "named": True},
+        {"number": 2, "name": "DataFrame.fillna", "cited": False, "named": False},
+        {"number": 3, "name": "read_csv", "cited": False, "named": False},
     ]
     assert body["invalid_citations"] == [7]
+
+
+def test_answer_marks_a_source_that_is_named_but_not_cited():
+    with make_client(FakeGenerator("Fill them with `fillna()`.")) as test_client:
+        body = test_client.post("/answer", json={"question": "fill empty cells"}).json()
+    assert [(source["name"], source["cited"], source["named"]) for source in body["sources"]] == [
+        ("DataFrame.dropna", False, False),
+        ("DataFrame.fillna", False, True),
+        ("read_csv", False, False),
+    ]
 
 
 def test_answer_reports_abstention():
     with make_client(FakeGenerator(NOT_FOUND)) as test_client:
         body = test_client.post("/answer", json={"question": "plot with seaborn"}).json()
     assert body["abstained"] is True
-    assert not any(source["cited"] for source in body["sources"])
+    assert not any(source["cited"] or source["named"] for source in body["sources"])
 
 
 def test_answer_is_unavailable_without_a_generator():

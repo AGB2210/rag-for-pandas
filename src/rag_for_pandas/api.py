@@ -53,7 +53,8 @@ class AnswerRequest(BaseModel):
 class AnswerSource(BaseModel):
     number: int
     name: str
-    cited: bool
+    cited: bool = Field(description="the answer cites this source's number")
+    named: bool = Field(description="the answer names this source's function, cited or not")
 
 
 class AnswerResponse(BaseModel):

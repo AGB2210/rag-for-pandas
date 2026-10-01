@@ -429,3 +429,88 @@ Answer generation with prompt C on all 300 gold questions:
 
 **Finding:** all changes are within run-to-run variation (experiment 13). The fix is about
 correctness of what the search shows, not about scores.
+
+## 17. Linking named functions to their sources (adopted)
+
+Experiment 14 found that prompts raise citations only by raising refusals. This experiment
+leaves the prompt and every answer unchanged and makes the link in code instead
+(`named_indices` in `rag_for_pandas/generation.py`): an excerpt is **named** when the answer
+writes that excerpt's function, and an answer **points to** an excerpt when it cites or
+names it.
+
+Fixed before any answer was read:
+
+- design the rule on validation questions 1-100, where answers may be read and the rule changed;
+- judge it once on validation questions 201-308, which no earlier experiment used;
+- then score gold once, from the answers saved in experiment 16;
+- adopt if, on the judging questions, (1) more answers point to a labelled document than cite
+  one, with a paired bootstrap interval that excludes zero, and (2) reading every name link
+  finds at most 5% wrong.
+
+**Design (questions 1-100).** Matching a function's name as any whole word gave 102 links, and
+reading them showed why that is too loose: many pandas names are ordinary words. "Cumulative
+sum" linked `Expanding.sum`, "find the count" linked `DataFrame.count`, and "merge" used as a
+verb linked `merge`. The rule therefore counts a name only when it is written as code: after
+a dot (`DataFrame.dropna`, `df.dropna`), as a call (`concat(`) or inside backticks. Three
+narrower guards followed:
+
+| Guard | Reason |
+|---|---|
+| Skip names after `np.` and the other non-pandas roots the silver labeller already skips | `np.mean` linked `DataFrame.mean` (seen) |
+| Skip a bare call when Python has a built-in of that name, such as `sum(x)` | not seen as a wrong link; such calls are common in answer code |
+| Skip "the `mode` parameter" and "parameter `mode`" | not seen as a wrong link; 10 of the 100 answers name a parameter this way |
+
+Names are compared by their last part, as in the rest of the project, so `df.dropna()` links
+a `Series.dropna` excerpt as well. When the answer writes one excerpt's name in full, only
+that excerpt is linked. After reading the design questions and before scoring the judging
+ones, a link to a same-named method of another class was defined as a separate category
+rather than as wrong; a wrong link is one where the matched text is not that pandas name at
+all (an ordinary word, a parameter, another library's function).
+
+With the final rule the design questions gave 68 links, none wrong and 15 to a same-named
+method of another class.
+
+**Judging (questions 201-308, labelled document retrieved for 57, not for 51).** Reproduced
+by `python scripts/compare_prompts.py --prompts C --start 200 --questions 108`:
+
+| Measure | Design, 1-100 | Judging, 201-308 |
+|---|---|---|
+| Cites a labelled document | 12/100 | 12/108 |
+| Cites or names a labelled document | 33/100 | 32/108 |
+| Gain (95% CI) | | +0.185 [+0.111, +0.259] |
+| Name links read | 68 | 61 |
+| ... wrong | 0 | 1 (1.6%) |
+| ... same-named method of another class | 15 | 11 (18%) |
+
+The wrong link: an answer used matplotlib's `plt.scatter`, which marked the pandas
+`PlotAccessor.scatter` excerpt. Both conditions are met. The rule was not changed after the
+judging questions were scored, so this case is still linked.
+
+**Gold, scored once** from the saved answers, so the answers are the ones scored in
+experiment 16:
+
+| Measure | Cites | Cites or names |
+|---|---|---|
+| Answerable (n=259): a correct document | 33 (13%) | 92 (36%) |
+| ... when a correct document was retrieved (n=157) | 33 (21%) | 92 (59%) |
+| Answerable: any excerpt | 67 (26%) | 140 (54%) |
+| Unanswerable (n=41): any excerpt | 8 (20%) | 13 (32%) |
+
+Names a correct function (132, and 101 of the 157) and refusals are unchanged, because no
+answer changed. Of the 101 answers that name a correct function with a correct document
+retrieved, 87 now point to a correct document; the other 5 of the 92 cite one without
+naming it.
+
+**Decision:** adopted. `/answer` returns `named` beside `cited` for each source, and the page
+shows both.
+
+**Limits.**
+
+- A link says which function the answer names. It does not check that the answer's statements
+  agree with the excerpt: experiment 12 found answers that cite the right document and still
+  invent an argument.
+- About one link in five is to a same-named method of another class, such as
+  `MultiIndex.duplicated` for an answer about `DataFrame.duplicated`.
+- On unanswerable questions more excerpts are now marked (13 against 8). The model named
+  those functions before; the link makes it visible.
+- Links were classified by one unblinded reading: the reader knew the rule.

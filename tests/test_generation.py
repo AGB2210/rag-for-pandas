@@ -8,7 +8,10 @@ from rag_for_pandas.generation import (
     excerpt,
     invalid_citations,
     is_abstention,
+    named_indices,
     names_correct_function,
+    pointed_indices,
+    points_to_correct_document,
 )
 
 DOCS = [
@@ -59,6 +62,52 @@ def test_cites_correct_document_requires_a_cited_correct_name():
     assert cites_correct_document("Use dropna [1].", DOCS, ["dropna"])
     assert not cites_correct_document("Use fillna [2].", DOCS, ["dropna"])
     assert not cites_correct_document("Use dropna.", DOCS, ["dropna"])  # named but not cited
+
+
+def docs_named(*qualnames):
+    return [{"qualname": qualname} for qualname in qualnames]
+
+
+def test_named_indices_links_names_written_as_code():
+    assert named_indices("Use `DataFrame.dropna()` here.", DOCS) == [0]
+    assert named_indices("Call df.fillna(0).", DOCS) == [1]
+    assert named_indices("Read it with read_csv('a.csv').", DOCS) == [2]
+    assert named_indices("Use the `dropna` method, then `fillna()`.", DOCS) == [0, 1]
+    assert named_indices("Use dropna_all.", DOCS) == []
+
+
+def test_named_indices_ignores_ordinary_words():
+    docs = docs_named("DataFrame.all", "DataFrame.count", "merge")
+    assert named_indices("Count all rows, then merge the tables.", docs) == []
+    assert named_indices("Use df.all() and `merge`.", docs) == [0, 2]
+
+
+def test_named_indices_ignores_other_libraries_python_and_parameters():
+    docs = docs_named("DataFrame.mean", "DataFrame.sum", "Series.mode")
+    assert named_indices("Pass np.mean to it.", docs) == []
+    assert named_indices("Add them with sum(values).", docs) == []  # Python's own sum
+    assert named_indices("Set the `mode` parameter to 'a'.", docs) == []
+    assert named_indices("Use the parameter `mode` here.", docs) == []
+    assert named_indices("Use df.mean(), `sum()` and `mode`.", docs) == [0, 1, 2]
+
+
+def test_named_indices_compares_last_names_unless_one_is_written_in_full():
+    docs = docs_named("DataFrame.dropna", "Series.dropna", "Index.dropna")
+    assert named_indices("Use df.dropna().", docs) == [0, 1, 2]
+    assert named_indices("Use Series.dropna.", docs) == [1]
+    assert named_indices("Use MultiIndex.dropna.", docs) == [0, 1, 2]  # no excerpt has that full name
+
+
+def test_pointed_indices_join_cited_and_named_excerpts():
+    assert pointed_indices("Use DataFrame.fillna. See [3].", DOCS) == [1, 2]
+    assert pointed_indices("Nothing here.", DOCS) == []
+
+
+def test_points_to_correct_document_accepts_a_named_or_cited_correct_name():
+    assert points_to_correct_document("Use DataFrame.dropna.", DOCS, ["dropna"])  # named, not cited
+    assert points_to_correct_document("Use it [1].", DOCS, ["dropna"])  # cited, not named
+    assert not points_to_correct_document("Drop them with dropna.", DOCS, ["dropna"])  # a bare word is not a link
+    assert not points_to_correct_document("Use DataFrame.fillna [2].", DOCS, ["dropna"])
 
 
 def test_names_correct_function_matches_whole_names_only():

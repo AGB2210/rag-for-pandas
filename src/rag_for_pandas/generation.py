@@ -11,14 +11,20 @@ examples raised the share of answers with a citation from 2/40 to 12/40.
 Prompts that forced citations harder (experiment 14 in docs/EXPERIMENTS.md)
 cited more but refused more often, even with the answer in an excerpt, so this
 prompt was kept.
+
+Most answers still name a function without citing its excerpt. Those excerpts
+are linked afterwards by code (`named_indices`), which leaves the answer's
+text untouched.
 """
 
 from __future__ import annotations
 
+import builtins
 import re
 from typing import Protocol
 
 from rag_for_pandas.corpus import final_name
+from rag_for_pandas.labels import FOREIGN_ROOTS
 
 # The local model the prompt below was chosen with. Defined here rather than in
 # local_generator.py so it can be read without loading PyTorch.
@@ -104,6 +110,46 @@ def invalid_citations(answer: str, doc_count: int) -> list[int]:
     return [int(n) for n in CITATION.findall(answer) if not 1 <= int(n) <= doc_count]
 
 
+def _names_as_code(answer: str, name: str) -> bool:
+    """Whether `name` is written as a pandas name in code: after a dot, as a call, or in backticks."""
+    escaped = re.escape(name)
+    # `np.mean` is NumPy's function, not the pandas one.
+    after_dot = any(m.group(1) not in FOREIGN_ROOTS for m in re.finditer(rf"(\w*)\.{escaped}(?!\w)", answer))
+    # A bare `sum(x)` is Python's own function when Python has one by that name.
+    as_call = not hasattr(builtins, name) and re.search(rf"(?<![\w.]){escaped}\(", answer) is not None
+    # "the `mode` parameter" names an argument, not the function `mode`.
+    in_backticks = re.search(rf"(?<!parameter )(?<!argument )`{escaped}(?:\(\))?`(?! parameter| argument)", answer) is not None
+    return after_dot or as_call or in_backticks
+
+
+def _names_in_full(answer: str, qualname: str) -> bool:
+    """Whether a dotted name such as `DataFrame.dropna` appears whole."""
+    return "." in qualname and re.search(rf"(?<![\w.]){re.escape(qualname)}(?!\w)", answer) is not None
+
+
+def named_indices(answer: str, docs: list[dict]) -> list[int]:
+    """0-based indices of the excerpts whose function the answer names, cited or not.
+
+    The model often names the right function without citing its excerpt, so
+    this link is made by code instead. A name counts only when written as code
+    (`DataFrame.dropna`, `df.dropna`, `concat(` or in backticks): many pandas
+    names are ordinary words, such as `all`, `count` and `merge`, so a bare
+    word does not count. Names are compared by their last part, as everywhere
+    else, so `df.dropna` links `Series.dropna` too; but when the answer writes
+    one excerpt's name in full, only that excerpt is linked.
+
+    The rule was shaped on validation questions and then checked on unseen
+    ones (experiment 17 in docs/EXPERIMENTS.md).
+    """
+    in_full = [i for i, doc in enumerate(docs) if _names_in_full(answer, doc["qualname"])]
+    full_names = {final_name(docs[i]["qualname"]) for i in in_full}
+    return [
+        i
+        for i, doc in enumerate(docs)
+        if i in in_full or (final_name(doc["qualname"]) not in full_names and _names_as_code(answer, final_name(doc["qualname"])))
+    ]
+
+
 def is_abstention(answer: str) -> bool:
     """Whether the answer says the documentation does not answer the question."""
     return NOT_FOUND.lower().rstrip(".") in answer.lower()
@@ -112,6 +158,16 @@ def is_abstention(answer: str) -> bool:
 def cites_correct_document(answer: str, docs: list[dict], labels: list[str]) -> bool:
     """Whether any cited excerpt is a document carrying a correct name."""
     return any(final_name(docs[i]["qualname"]) in labels for i in cited_indices(answer, len(docs)))
+
+
+def pointed_indices(answer: str, docs: list[dict]) -> list[int]:
+    """0-based indices of the excerpts a reader is sent to: those the answer cites or names."""
+    return sorted({*cited_indices(answer, len(docs)), *named_indices(answer, docs)})
+
+
+def points_to_correct_document(answer: str, docs: list[dict], labels: list[str]) -> bool:
+    """Whether any excerpt the answer cites or names is a document carrying a correct name."""
+    return any(final_name(docs[i]["qualname"]) in labels for i in pointed_indices(answer, docs))
 
 
 def names_correct_function(answer: str, labels: list[str]) -> bool:

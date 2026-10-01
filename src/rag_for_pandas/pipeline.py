@@ -17,6 +17,7 @@ from rag_for_pandas.generation import (
     excerpt,
     invalid_citations,
     is_abstention,
+    named_indices,
 )
 from rag_for_pandas.jsonl import load_jsonl
 
@@ -43,7 +44,8 @@ class SearchHit:
 class Source:
     number: int  # the [n] an answer uses to cite this document
     name: str
-    cited: bool
+    cited: bool  # the model wrote this document's [n]
+    named: bool  # the answer names this document's function, with or without [n]
 
 
 @dataclass
@@ -80,10 +82,11 @@ class Pipeline:
         with self._generation_lock:
             text = self.generator.generate(build_messages(question, context))
         cited = set(cited_indices(text, len(context)))
+        named = set(named_indices(text, context))
         return AnswerResult(
             answer=text,
             abstained=is_abstention(text),
-            sources=[Source(number + 1, doc["qualname"], number in cited) for number, doc in enumerate(context)],
+            sources=[Source(number + 1, doc["qualname"], number in cited, number in named) for number, doc in enumerate(context)],
             invalid_citations=invalid_citations(text, len(context)),
         )
 

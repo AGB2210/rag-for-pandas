@@ -6,6 +6,7 @@ import {
   answer,
   search,
   type AnswerResponse,
+  type AnswerSource,
   type SearchResponse,
   type SearchResult,
 } from './api'
@@ -32,8 +33,29 @@ export function repositoryPath(sourceFile: string): string {
   return index === -1 ? sourceFile : sourceFile.slice(index + 'pandas/'.length)
 }
 
+/** How the answer points to a source: by its number, by naming its function, both or neither. */
+function SourceTags({ source }: { source: AnswerSource }) {
+  if (!source.cited && !source.named) {
+    return <span className="tag muted">not mentioned</span>
+  }
+  return (
+    <>
+      {source.cited && (
+        <span className="tag" title="The answer gives this source's number.">
+          cited
+        </span>
+      )}{' '}
+      {source.named && (
+        <span className="tag" title="The answer names this source's function.">
+          named
+        </span>
+      )}
+    </>
+  )
+}
+
 function AnswerView({ data }: { data: AnswerResponse }) {
-  const citedAny = data.sources.some((source) => source.cited)
+  const pointsToAny = data.sources.some((source) => source.cited || source.named)
   return (
     <article className="answer">
       <h2>Answer</h2>
@@ -47,15 +69,14 @@ function AnswerView({ data }: { data: AnswerResponse }) {
           The answer cites sources that do not exist: {data.invalid_citations.map((n) => `[${n}]`).join(', ')}
         </p>
       )}
-      {!data.abstained && !citedAny && (
-        <p className="hint">This answer does not cite a source, so check it against the documentation.</p>
+      {!data.abstained && !pointsToAny && (
+        <p className="hint">This answer does not cite or name a source below, so check it against the documentation.</p>
       )}
       <h3>Sources given to the model</h3>
       <ol className="sources">
         {data.sources.map((source) => (
-          <li key={source.number} className={source.cited ? 'cited' : undefined}>
-            <span className="source-number">[{source.number}]</span> <code>{source.name}</code>{' '}
-            <span className={source.cited ? 'tag' : 'tag muted'}>{source.cited ? 'cited' : 'not cited'}</span>
+          <li key={source.number}>
+            <span className="source-number">[{source.number}]</span> <code>{source.name}</code> <SourceTags source={source} />
           </li>
         ))}
       </ol>

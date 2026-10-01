@@ -43,7 +43,8 @@ them as `[1]`-`[3]` or say it could not find the answer. On the 259 answerable g
 |---|---|
 | Retriever supplied a correct document in the top 3 | 61% |
 | Answer cites a correct document | 13% (21% when one was retrieved) |
-| Answer names a correct function, cited or not | 51% (64% when one was retrieved) |
+| Answer cites or names a correct document | 36% (59% when one was retrieved) |
+| Answer names a correct function, in the excerpts or not | 51% (64% when one was retrieved) |
 | Answer cites an excerpt that does not exist | 0% |
 | Answer says it could not find the answer, on the 41 unanswerable questions | 46% |
 
@@ -52,6 +53,13 @@ without citing its source, and sometimes adds details that are not in the docume
 The "names a correct function" measure was added after reading answers; see experiment 12.
 Prompts that made the model cite more often also made it refuse more often, including when
 the answer was retrieved, so they were not adopted; see experiment 14.
+
+Instead, the link is made by code after the answer is written: when an answer names an
+excerpt's function as code (`DataFrame.dropna`, `df.dropna()`), that excerpt is marked as
+named. The answer's text is not changed, so refusals are not affected. The rule was shaped on
+100 validation questions and judged on 108 unseen ones, where 1 of 61 links was wrong and 11
+were to a same-named method of another class; see experiment 17. A link says which function
+the answer names, not that every statement in the answer agrees with that source.
 Numbers are produced by `scripts/evaluate_generation.py`.
 
 ## How it works
@@ -89,6 +97,8 @@ flowchart LR
 6. **Answer generation.** The top 3 documents, numbered, go to a local language model with
    rules to cite them and a fixed sentence for when they do not answer the question. The
    prompt was chosen by comparing prompts on validation questions.
+7. **Source links.** The model seldom writes citations, so code marks each excerpt whose
+   function the answer names. The page shows both: sources the answer cited and sources it named.
 
 ## Setup
 
@@ -190,7 +200,7 @@ Interactive documentation is at `http://127.0.0.1:8000/docs`. Models load once a
 |---|---|---|
 | `GET /health` | | status, number of documents, whether answers are enabled |
 | `POST /search` | `{"query": "...", "k": 5}` | top k documents with score, excerpt and source file |
-| `POST /answer` | `{"question": "..."}` | an answer, whether it abstained, and the 3 sources it could cite |
+| `POST /answer` | `{"question": "..."}` | an answer, whether it abstained, and its 3 sources, each marked as cited, named or neither |
 
 Queries must be 1-500 characters after trimming whitespace, and `k` must be 1-20; other
 requests get HTTP 422. Only one answer is generated at a time; searches do not wait for it.
@@ -207,16 +217,16 @@ A response from the service on the development machine:
   "answer": "To remove rows containing missing values, use `DataFrame.dropna` with the parameter `how='any'`. This will remove any row where at least one value is missing.",
   "abstained": false,
   "sources": [
-    {"number": 1, "name": "DataFrame.dropna", "cited": false},
-    {"number": 2, "name": "Categorical.isnull", "cited": false},
-    {"number": 3, "name": "Categorical.isna", "cited": false}
+    {"number": 1, "name": "DataFrame.dropna", "cited": false, "named": true},
+    {"number": 2, "name": "Categorical.isnull", "cited": false, "named": false},
+    {"number": 3, "name": "Categorical.isna", "cited": false, "named": false}
   ],
   "invalid_citations": []
 }
 ```
 
 The answer names the right function but cites nothing, which is typical of the small
-generator (see the cited-answers results above).
+generator (see the cited-answers results above). `named` still marks the source it used.
 
 Environment variables:
 
@@ -229,9 +239,10 @@ Environment variables:
 ## Web page
 
 A React page (Vite, TypeScript) in `frontend/` asks questions or searches the documentation.
-It shows each answer with its sources, marks which sources were cited, and warns when an answer
-cites nothing, cites a source that does not exist, or when the documentation did not answer the
-question. Search results link to the pandas source file at the pinned commit.
+It shows each answer with its sources, marks which sources the answer cited or named, and warns
+when an answer points to no source, cites a source that does not exist, or when the
+documentation did not answer the question. Search results link to the pandas source file at the
+pinned commit.
 
 Requires Node.js 24 (developed with 24.16.0):
 
@@ -290,8 +301,12 @@ start.bat            one-click setup and start on Windows
 - The API has no authentication or rate limiting. It is meant to run on your own computer:
   the commands in this README listen on 127.0.0.1 only.
 - The answer generator is a 1.5B-parameter model chosen to fit a 4 GB GPU. Its answers are
-  checked only for citations and refusals, not for whether every statement is true, and
-  they often name functions without citing them or add details not in the documentation.
+  checked only for citations, named functions and refusals, not for whether every statement
+  is true, and they often add details not in the documentation.
+- A source is marked as named by matching the function's last name in the answer, so
+  `df.dropna()` also marks a `Series.dropna` excerpt, and another library's function with the
+  same name can be matched (`plt.scatter` marked the pandas `scatter` excerpt in one of 61
+  links read).
 
 ## Data and licences
 

@@ -92,7 +92,8 @@ def main() -> None:
             else:
                 reply = answer.json()
                 check("POST /answer", answer.status_code == 200 and len(reply["sources"]) == 3,
-                      f"{seconds:.1f} s, cited {[s['name'] for s in reply['sources'] if s['cited']]}, answer: {reply['answer'][:120]!r}")
+                      f"{seconds:.1f} s, cited {[s['name'] for s in reply['sources'] if s['cited']]}, "
+                      f"named {[s['name'] for s in reply['sources'] if s['named']]}, answer: {reply['answer'][:120]!r}")
 
             check("GET /docs", client.get("/docs").status_code == 200)
     except Exception as error:  # report any failure as a failed check rather than a traceback

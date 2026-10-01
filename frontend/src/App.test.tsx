@@ -31,9 +31,9 @@ const ANSWER: AnswerResponse = {
   answer: 'Use DataFrame.dropna [1].',
   abstained: false,
   sources: [
-    { number: 1, name: 'DataFrame.dropna', cited: true },
-    { number: 2, name: 'DataFrame.fillna', cited: false },
-    { number: 3, name: 'read_csv', cited: false },
+    { number: 1, name: 'DataFrame.dropna', cited: true, named: true },
+    { number: 2, name: 'DataFrame.fillna', cited: false, named: false },
+    { number: 3, name: 'read_csv', cited: false, named: false },
   ],
   invalid_citations: [],
 }
@@ -63,25 +63,46 @@ describe('App', () => {
     const items = screen.getAllByRole('listitem')
     expect(items[0]).toHaveTextContent('DataFrame.dropna')
     expect(items[0]).toHaveTextContent('cited')
-    expect(items[1]).toHaveTextContent('not cited')
-    expect(screen.queryByText(/does not cite a source/)).not.toBeInTheDocument()
+    expect(items[0]).toHaveTextContent('named')
+    expect(items[1]).toHaveTextContent('not mentioned')
+    expect(screen.queryByText(/does not cite or name a source/)).not.toBeInTheDocument()
+  })
+
+  it('marks a source the answer names without citing it, and does not warn', async () => {
+    fakeServer(200, {
+      ...ANSWER,
+      answer: 'Use DataFrame.dropna.',
+      sources: ANSWER.sources.map((s) => ({ ...s, cited: false })),
+    })
+    await submit('delete empty rows')
+
+    expect(await screen.findByText('Use DataFrame.dropna.')).toBeInTheDocument()
+    const items = screen.getAllByRole('listitem')
+    expect(items[0]).toHaveTextContent('named')
+    expect(items[0]).not.toHaveTextContent('cited')
+    expect(screen.queryByText(/does not cite or name a source/)).not.toBeInTheDocument()
   })
 
   it('warns when an answer cites nothing or cites missing sources', async () => {
     fakeServer(200, {
       ...ANSWER,
       answer: 'Use dropna. See [5].',
-      sources: ANSWER.sources.map((s) => ({ ...s, cited: false })),
+      sources: ANSWER.sources.map((s) => ({ ...s, cited: false, named: false })),
       invalid_citations: [5],
     })
     await submit('delete empty rows')
 
-    expect(await screen.findByText(/does not cite a source/)).toBeInTheDocument()
+    expect(await screen.findByText(/does not cite or name a source/)).toBeInTheDocument()
     expect(screen.getByText(/cites sources that do not exist: \[5\]/)).toBeInTheDocument()
   })
 
   it('says when the documentation did not answer the question', async () => {
-    fakeServer(200, { ...ANSWER, answer: 'I could not find this in the pandas documentation.', abstained: true })
+    fakeServer(200, {
+      ...ANSWER,
+      answer: 'I could not find this in the pandas documentation.',
+      abstained: true,
+      sources: ANSWER.sources.map((s) => ({ ...s, cited: false, named: false })),
+    })
     await submit('plot with seaborn')
 
     expect(await screen.findByText(/did not answer this question/)).toBeInTheDocument()

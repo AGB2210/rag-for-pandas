@@ -2,6 +2,9 @@
 
 For each prompt, measures how often answers cite an excerpt, cite a number that
 points at no excerpt, cite a document carrying a silver label, and abstain.
+A second line counts answers that cite or name a labelled document (naming is
+linked by rag_for_pandas.generation.named_indices) and gives the gain over
+citing alone with a paired bootstrap interval.
 Abstention is split by whether the retrieved excerpts contain a labelled
 document: abstaining is right when they do not, and wrong when they do.
 Silver labels are loose, so these rates are approximate; gold is used only
@@ -31,6 +34,8 @@ import json
 import time
 from collections.abc import Callable
 
+import numpy as np
+
 from rag_for_pandas import paths
 from rag_for_pandas.corpus import final_name
 from rag_for_pandas.generation import (
@@ -45,10 +50,12 @@ from rag_for_pandas.generation import (
     is_abstention,
     names_correct_function,
     numbered_context,
+    points_to_correct_document,
     user_message,
 )
 from rag_for_pandas.jsonl import load_jsonl, write_jsonl
 from rag_for_pandas.local_generator import LocalGenerator
+from rag_for_pandas.metrics import paired_bootstrap_ci
 from rag_for_pandas.retrieval import embedding_rankings
 
 FIRST_SYSTEM_PROMPT = (
@@ -155,7 +162,10 @@ def main() -> None:
 
         cites = sum(bool(cited_indices(a, CONTEXT_DOCS)) for a in answers)
         invalid = sum(bool(invalid_citations(a, CONTEXT_DOCS)) for a in answers)
-        correct = sum(cites_correct_document(a, ctx, q["labels"]) for a, ctx, q in zip(answers, contexts, queries))
+        cites_correct = np.array([float(cites_correct_document(a, ctx, q["labels"])) for a, ctx, q in zip(answers, contexts, queries)])
+        points_correct = np.array([float(points_to_correct_document(a, ctx, q["labels"])) for a, ctx, q in zip(answers, contexts, queries)])
+        correct, points = int(cites_correct.sum()), int(points_correct.sum())
+        low, high = paired_bootstrap_ci(cites_correct, points_correct)
         names = sum(names_correct_function(a, q["labels"]) for a, q in zip(answers, queries))
         wrong_abstain = sum(is_abstention(a) for a, h in zip(answers, has_answer) if h)
         right_abstain = sum(is_abstention(a) for a, h in zip(answers, has_answer) if not h)
@@ -163,13 +173,21 @@ def main() -> None:
             f"  {name:<26}{cites:>5}/{len(queries):<2}{invalid:>6}/{len(queries):<2}{correct:>6}/{len(queries):<2}{names:>5}/{len(queries):<2}"
             f"{wrong_abstain:>19}/{answerable:<3}{right_abstain:>16}/{unanswerable:<3}{seconds:>10.1f}"
         )
+        print(
+            f"    cites or names a labelled document: {points}/{len(queries)}, "
+            f"{(points - correct) / len(queries):+.3f} [{low:+.3f}, {high:+.3f}] against citing one"
+        )
         result = {
             "prompt": name, "start": args.start, "questions": len(queries), "cites": cites, "invalid": invalid,
-            "correct": correct, "names_correct": names,
+            "correct": correct, "points_to_correct": points, "names_correct": names,
             "abstain_when_answer_in_context": wrong_abstain, "abstain_when_not": right_abstain,
         }
         print("RESULT " + json.dumps(result), flush=True)
-        results.append({**result, "answers": [{"question": q["query"], "answer": a} for q, a in zip(queries, answers)]})
+        saved = [
+            {"question": q["query"], "labels": q["labels"], "context": [d["qualname"] for d in ctx], "answer": a}
+            for q, ctx, a in zip(queries, contexts, answers)
+        ]
+        results.append({**result, "answers": saved})
 
     paths.PROMPT_COMPARISON.parent.mkdir(parents=True, exist_ok=True)
     write_jsonl(paths.PROMPT_COMPARISON, results)

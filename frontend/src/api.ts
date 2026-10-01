@@ -18,7 +18,10 @@ export interface SearchResponse {
 export interface AnswerSource {
   number: number
   name: string
+  /** The answer gives this source's number, like [1]. */
   cited: boolean
+  /** The answer names this source's function, with or without its number. */
+  named: boolean
 }
 
 export interface AnswerResponse {
