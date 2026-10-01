@@ -37,6 +37,14 @@ echo Python packages installed.
 echo.
 :python_ready
 
+rem A folder that was moved or copied keeps .venv's link to the code in the old
+rem folder, so the link is checked on every start and made again when it is wrong.
+"%PY%" -c "import pathlib, sys, rag_for_pandas; sys.exit(0 if pathlib.Path(rag_for_pandas.__file__).resolve().is_relative_to(pathlib.Path('src').resolve()) else 1)" >nul 2>&1 && goto python_linked
+echo This folder was moved or copied, so its code is linked to .venv again...
+"%PY%" -m pip install --disable-pip-version-check -e . --no-deps || goto failed
+echo.
+:python_linked
+
 rem ---- 2. Web page ----------------------------------------------------------
 rem Built on every start, so changes from a git pull always reach the page. Its
 rem packages are installed again only when package-lock.json changes.
@@ -69,11 +77,13 @@ netstat -ano -p tcp | findstr "LISTENING" | findstr /c:":%PORT% " >nul && goto p
 
 rem ---- 5. Answers need an NVIDIA GPU and the answer model; search needs neither -
 if defined RAG_FOR_PANDAS_GENERATOR goto generator_chosen
-rem Exit code 0: GPU and model ready; 1: no GPU; 2: GPU, but the model is not downloaded.
-"%PY%" -c "import sys, torch; from huggingface_hub import try_to_load_from_cache; from rag_for_pandas.generation import LOCAL_MODEL; sys.exit(1 if not torch.cuda.is_available() else 0 if isinstance(try_to_load_from_cache(LOCAL_MODEL, 'model.safetensors'), str) else 2)" >nul 2>&1
+rem Exit code 0: GPU and model ready; 2: GPU, but the model is not downloaded; 3: no GPU.
+rem Any other code means the check itself broke, so its error is shown instead of a guess.
+"%PY%" -c "import sys, torch; from huggingface_hub import try_to_load_from_cache; from rag_for_pandas.generation import LOCAL_MODEL; sys.exit(3 if not torch.cuda.is_available() else 0 if isinstance(try_to_load_from_cache(LOCAL_MODEL, 'model.safetensors'), str) else 2)" >nul
 set "READY=%errorlevel%"
 if "%READY%"=="0" goto answers_on
 if "%READY%"=="2" goto ask_model
+if not "%READY%"=="3" goto check_failed
 set "RAG_FOR_PANDAS_GENERATOR=none"
 echo No NVIDIA GPU found, so answers are off. Search still works.
 goto generator_chosen
@@ -130,6 +140,11 @@ goto stop
 :port_busy
 echo Port %PORT% is already in use, perhaps by another copy of the server.
 echo Close that program, then run start.bat again.
+goto stop
+
+:check_failed
+echo.
+echo The check for an NVIDIA GPU did not finish; the message above says why.
 goto stop
 
 :cancelled

@@ -162,7 +162,8 @@ installing, then:
 
 Later runs skip the installations. The page is rebuilt on every start (a few seconds), so changes
 from a `git pull` always reach it. If `requirements.txt` or `frontend/package-lock.json` changes,
-the next run installs again. Close the window to stop the server.
+the next run installs again. If the folder is moved or copied, the next start links `.venv` to
+the code in its new place. Close the window to stop the server.
 
 Tested on the development machine with a fresh clone from GitHub, in a folder whose name
 contains a space: the first run took about 5 minutes, with most packages already in the local
@@ -170,7 +171,10 @@ pip cache, so a first run elsewhere downloads more and takes longer; later start
 Declining setup, a changed `requirements.txt` or `package-lock.json`, a missing retriever, a
 port already in use, no GPU (simulated by hiding it), a missing answer model (simulated with an
 empty model cache, answering no, which downloaded nothing), Node.js missing with and without an
-earlier page build, and an answer containing quotes each gave the expected result.
+earlier page build, and an answer containing quotes each gave the expected result. So did a
+`.venv` linked to a folder that no longer exists, a `.venv` linked to another copy of the code
+(both were linked again, tested without network access), and a GPU check that crashes, which
+stops with the error shown instead of reporting that there is no GPU.
 
 ## Running the API
 
