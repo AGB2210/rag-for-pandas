@@ -3,8 +3,8 @@
 [![CI](https://github.com/AGB2210/rag-for-pandas/actions/workflows/ci.yml/badge.svg)](https://github.com/AGB2210/rag-for-pandas/actions/workflows/ci.yml)
 
 Search over the pandas API documentation for the function that answers a question written
-in everyday words, with short cited answers, trained and evaluated on real Stack Overflow
-questions.
+in everyday words, with short answers that point to their sources, trained and evaluated on
+real Stack Overflow questions.
 
 People rarely ask "how do I use `dropna`". They ask "how do I delete rows with empty
 cells", and keyword search fails when the question and the documentation use different
@@ -226,7 +226,8 @@ A response from the service on the development machine:
 ```
 
 The answer names the right function but cites nothing, which is typical of the small
-generator (see the cited-answers results above). `named` still marks the source it used.
+generator (see the cited-answers results above). `named` still marks the source whose
+function it names.
 
 Environment variables:
 
@@ -303,6 +304,9 @@ start.bat            one-click setup and start on Windows
 - The answer generator is a 1.5B-parameter model chosen to fit a 4 GB GPU. Its answers are
   checked only for citations, named functions and refusals, not for whether every statement
   is true, and they often add details not in the documentation.
+- The question goes to the model as written, so a question can tell it to ignore its rules
+  (asked to reply with one fixed word, it did). The text is shown as plain text, and such an
+  answer points to no source, which the page says.
 - A source is marked as named by matching the function's last name in the answer, so
   `df.dropna()` also marks a `Series.dropna` excerpt, and another library's function with the
   same name can be matched (`plt.scatter` marked the pandas `scatter` excerpt in one of 61

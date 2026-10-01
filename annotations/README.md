@@ -36,7 +36,7 @@ Rules applied while labelling:
 - Aliases that share one docstring (`agg` and `aggregate`) are listed together.
 - "Answerable" means answerable from this corpus. When the right function
   exists in pandas but not in the corpus (for example `dt.year`, whose
-  documentation the extractor does not read), the row is marked `no` and its
+  documentation the extractor did not read at the time), the row is marked `no` and its
   note starts with `corpus gap:`. Those rows list what a corpus fix should add.
 - After the corpus fix in experiment 13 of `docs/EXPERIMENTS.md`, rows whose
   missing documentation was added were relabelled from their notes and now start

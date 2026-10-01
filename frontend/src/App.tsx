@@ -139,7 +139,7 @@ export default function App() {
     <main>
       <header>
         <h1>rag-for-pandas</h1>
-        <p>Ask a pandas question in your own words. Answers cite the documentation they come from.</p>
+        <p>Ask a pandas question in your own words. Each answer is shown with the documentation it was written from.</p>
       </header>
 
       <form onSubmit={handleSubmit}>

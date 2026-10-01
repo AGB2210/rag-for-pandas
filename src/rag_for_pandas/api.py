@@ -86,7 +86,7 @@ def create_app(load: Callable[[], Pipeline] = load_pipeline, frontend: Path | No
 
     app = FastAPI(
         title="rag-for-pandas",
-        description="Search pandas API documentation and get answers that cite it.",
+        description="Search pandas API documentation and get short answers with their sources.",
         version="0.1.0",
         lifespan=lifespan,
     )

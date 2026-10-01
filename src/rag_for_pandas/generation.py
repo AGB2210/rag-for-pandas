@@ -31,7 +31,7 @@ from rag_for_pandas.labels import FOREIGN_ROOTS
 LOCAL_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
 
 CONTEXT_DOCS = 3
-# The median docstring is 194 words, so most excerpts are complete; long ones are cut.
+# The median docstring is 190 words, so about half the excerpts are complete; longer ones are cut.
 MAX_EXCERPT_WORDS = 200
 NOT_FOUND = "I could not find this in the pandas documentation."
 
