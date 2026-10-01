@@ -586,3 +586,76 @@ functions and asks the reader to check them.
   `.remove_time()` is not flagged.
 - A function used only inside example code is not flagged.
 - Flags were classified by one unblinded reading, as in experiment 17.
+
+## 19. Hard negatives: how many top ranks to skip (no change)
+
+Experiment 9 skipped the base model's top 3 documents when mining a hard negative, as a
+guard against unlabelled correct answers. That choice was a judgement and had not been
+tested. Skips of 0, 1 and 3 were compared, everything else as shipped.
+
+Fixed before any run: validation only, seeds 1, 2 and 3 for each setting, R@5 averaged over
+the seeds, paired bootstrap over questions. The default changes only if another skip beats
+skip 3 with an interval that excludes zero. Seed 3 had been chosen for skip 3 in experiment 9,
+so a comparison on that seed alone would favour skip 3; all three seeds are averaged instead.
+
+Each run is `python scripts/train_retriever.py --hard-negatives --seed S --negative-skip N
+--output-dir DIR`; the table is printed by `scripts/compare_runs.py`.
+
+| Skip | R@1 | R@5 | R@10 | R@5 per seed (1, 2, 3) | R@5 gap vs skip 3 (95% CI) |
+|---|---|---|---|---|---|
+| 3 (shipped) | 0.387 | 0.640 | 0.723 | 0.636, 0.633, 0.649 | |
+| 1 | 0.413 | 0.654 | 0.737 | 0.659, 0.659, 0.643 | +0.014 [-0.005, +0.034] |
+| 0 | 0.406 | 0.650 | 0.723 | 0.656, 0.646, 0.649 | +0.011 [-0.014, +0.036] |
+
+Skip 3 with seed 3 gave 0.649, the shipped model's validation score, so the changed training
+script still trains the same model.
+
+**Finding:** skipping fewer ranks did not hurt, and skip 1 was slightly ahead at every depth,
+but neither gap excludes zero. The risk that motivated the skip, pushing away unlabelled correct
+documents, did not show up as lower validation recall. Validation labels are the same loose
+silver labels, so they cannot fully test that risk: a model trained to push away an unlabelled
+correct document is not penalised for it there.
+
+**Decision:** skip 3 stays, as fixed in advance. No candidate was scored on gold.
+
+## 20. Other base models: bge-small and e5-small (no change)
+
+Every retriever so far started from `all-MiniLM-L6-v2`, chosen without a comparison. Two
+newer models of the same class were fine-tuned with the shipped recipe (hard negatives,
+skip 3) and compared with it.
+
+| Base model | Parameters | Input prefixes, from the model card |
+|---|---|---|
+| `all-MiniLM-L6-v2` | 22.7M | none |
+| `BAAI/bge-small-en-v1.5` | 33.4M | query: "Represent this sentence for searching relevant passages: " |
+| `intfloat/e5-small-v2` | 33.4M | query: "query: ", document: "passage: " |
+
+Fixed before any run: validation only, seeds 1, 2 and 3, R@5 averaged over the seeds, paired
+bootstrap over questions; prefixes as the model cards give them, not tuned; inputs cut at 256
+tokens for all three, which is MiniLM's own limit and what fits the 4 GB GPU at batch size 32.
+A base model is a candidate only if it beats MiniLM with an interval that excludes zero.
+
+Each run is `python scripts/train_retriever.py --hard-negatives --seed S --base-model NAME
+--query-prefix ... --document-prefix ... --output-dir DIR`. The MiniLM runs are the skip 3
+runs of experiment 19.
+
+| Base model | R@5 before fine-tuning | R@1 | R@5 | R@10 | R@5 per seed (1, 2, 3) | R@5 gap vs MiniLM (95% CI) |
+|---|---|---|---|---|---|---|
+| MiniLM (shipped) | 0.442 | 0.387 | 0.640 | 0.723 | 0.636, 0.633, 0.649 | |
+| bge-small | 0.510 | 0.398 | 0.646 | 0.720 | 0.656, 0.649, 0.633 | +0.006 [-0.035, +0.048] |
+| e5-small | 0.461 | 0.431 | 0.635 | 0.709 | 0.617, 0.649, 0.640 | -0.004 [-0.040, +0.031] |
+
+One run took about 70 s for MiniLM and 220-320 s for the other two on the development
+machine, where the larger models fill the GPU's memory.
+
+**Finding:** bge-small scores higher before fine-tuning (0.510 against 0.442), but after
+fine-tuning on the same 1,663 pairs the three models are indistinguishable at R@5. The
+training data, not the base model, is what limits the retriever here. e5-small has the
+highest R@1; R@5 was the metric fixed in advance, so that is noted and not acted on.
+
+**Decision:** MiniLM stays. It is the smallest of the three, trains three to five times
+faster on this machine, and nothing was gained by replacing it. No candidate was scored on gold.
+
+Per-run numbers in experiments 19 and 20 come from the hits saved by `train_retriever.py`.
+The trainer's own evaluator, printed during training, differed from them by one question in
+two of the fifteen runs; the cause was not investigated.

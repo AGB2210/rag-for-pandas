@@ -100,7 +100,8 @@ flowchart LR
    normalised title; the split raises an error if any gold question gets through.
 5. **Training.** MultipleNegativesRankingLoss with one mined hard negative per pair: the
    document the base model ranks highest, below its top 3, that does not carry a labelled
-   name. The top 3 are skipped because loose labels miss correct answers that rank there.
+   name. The top 3 are skipped because loose labels miss correct answers that rank there;
+   skipping 0 or 1 instead made no measurable difference on validation (experiment 19).
 6. **Answer generation.** The top 3 documents, numbered, go to a local language model with
    rules to cite them and a fixed sentence for when they do not answer the question. The
    prompt was chosen by comparing prompts on validation questions.
@@ -305,9 +306,12 @@ start.bat            one-click setup and start on Windows
   experiments 13 and 16 and not repeated).
 - The retriever is small (22M parameters) and was trained on 1,663 question-document pairs
   from 984 questions (training questions with more than 3 labels are skipped).
-- Each configuration was trained once (seed 3). Retraining after a small data change moved gold
-  R@5 by 3-4 points, so single-run differences of that size are not meaningful. Mining hard
-  negatives with the fine-tuned model instead of the base model was not tried.
+- The shipped models were each trained once (seed 3). Retraining after a small data change
+  moved gold R@5 by 3-4 points, so single-run differences of that size are not meaningful.
+  Mining hard negatives with the fine-tuned model instead of the base model was not tried.
+- Two other base models, `bge-small-en-v1.5` and `e5-small-v2`, were fine-tuned the same way
+  and were not better on validation (experiment 20), so the retriever is limited by its
+  training data more than by its base model.
 - The API has no authentication or rate limiting. It is meant to run on your own computer:
   the commands in this README listen on 127.0.0.1 only.
 - The answer generator is a 1.5B-parameter model chosen to fit a 4 GB GPU. Its answers are
